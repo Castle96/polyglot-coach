@@ -1,0 +1,19 @@
+[tool.uv.workspace]
+members = [
+    "mcp/learner-memory",
+    "mcp/curriculum",
+    "mcp/dictionary",
+    "mcp/grammar",
+    "mcp/locale",
+    "mcp/conversation",
+    "mcp/review",
+    "mcp/analytics",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
