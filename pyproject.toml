@@ -1,5 +1,7 @@
 [tool.uv.workspace]
 members = [
+    "apps/api",
+    "mcp/shared",
     "mcp/learner-memory",
     "mcp/curriculum",
     "mcp/dictionary",
@@ -17,3 +19,18 @@ dev-dependencies = [
     "ruff>=0.4",
     "mypy>=1.10",
 ]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.uv.sources]
+polyglot-coach-api = { workspace = true }
+polyglot-coach-shared = { workspace = true }
+polyglot-coach-learner-memory = { workspace = true }
+polyglot-coach-curriculum = { workspace = true }
+polyglot-coach-dictionary = { workspace = true }
+polyglot-coach-grammar = { workspace = true }
+polyglot-coach-locale = { workspace = true }
+polyglot-coach-conversation = { workspace = true }
+polyglot-coach-review = { workspace = true }
+polyglot-coach-analytics = { workspace = true }

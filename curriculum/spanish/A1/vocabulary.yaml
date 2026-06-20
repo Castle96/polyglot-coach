@@ -1,0 +1,132 @@
+words:
+  # Greetings & Basics
+  - word: hola
+    translation: hello
+    tags: greeting, basic
+  - word: buenos días
+    translation: good morning
+    tags: greeting, basic
+  - word: buenas tardes
+    translation: good afternoon
+    tags: greeting, basic
+  - word: buenas noches
+    translation: good night
+    tags: greeting, basic
+  - word: adiós
+    translation: goodbye
+    tags: greeting, basic
+  - word: gracias
+    translation: thank you
+    tags: courtesy, basic
+  - word: por favor
+    translation: please
+    tags: courtesy, basic
+  - word: sí
+    translation: yes
+    tags: basic
+  - word: no
+    translation: no
+    tags: basic
+
+  # Pronouns
+  - word: yo
+    translation: I
+    tags: pronoun, basic
+  - word: tú
+    translation: you (informal)
+    tags: pronoun, basic
+  - word: él
+    translation: he
+    tags: pronoun, basic
+  - word: ella
+    translation: she
+    tags: pronoun, basic
+  - word: nosotros
+    translation: we
+    tags: pronoun, basic
+  - word: ellos
+    translation: they
+    tags: pronoun, basic
+
+  # Common Verbs
+  - word: ser
+    translation: to be (permanent)
+    tags: verb, essential
+  - word: estar
+    translation: to be (temporary)
+    tags: verb, essential
+  - word: tener
+    translation: to have
+    tags: verb, essential
+  - word: hablar
+    translation: to speak
+    tags: verb, basic
+  - word: comer
+    translation: to eat
+    tags: verb, basic
+  - word: vivir
+    translation: to live
+    tags: verb, basic
+  - word: ir
+    translation: to go
+    tags: verb, essential
+
+  # Questions
+  - word: qué
+    translation: what
+    tags: question, basic
+  - word: quién
+    translation: who
+    tags: question, basic
+  - word: dónde
+    translation: where
+    tags: question, basic
+  - word: cuándo
+    translation: when
+    tags: question, basic
+  - word: por qué
+    translation: why
+    tags: question, basic
+  - word: cómo
+    translation: how
+    tags: question, basic
+  - word: cuánto
+    translation: how much
+    tags: question, basic
+
+  # Food & Restaurant
+  - word: el agua
+    translation: water
+    tags: food, restaurant
+  - word: la comida
+    translation: food
+    tags: food, restaurant
+  - word: el pan
+    translation: bread
+    tags: food, restaurant
+  - word: la fruta
+    translation: fruit
+    tags: food, restaurant
+  - word: la cuenta
+    translation: bill/check
+    tags: restaurant
+
+  # Family
+  - word: la madre
+    translation: mother
+    tags: family
+  - word: el padre
+    translation: father
+    tags: family
+  - word: el hermano
+    translation: brother
+    tags: family
+  - word: la hermana
+    translation: sister
+    tags: family
+  - word: el abuelo
+    translation: grandfather
+    tags: family
+  - word: la abuela
+    translation: grandmother
+    tags: family

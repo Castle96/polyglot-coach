@@ -1,0 +1,82 @@
+words:
+  - word: hallo
+    translation: hello
+    tags: greetings
+  - word: tschüss
+    translation: goodbye (informal)
+    tags: greetings
+  - word: auf Wiedersehen
+    translation: goodbye (formal)
+    tags: greetings
+  - word: danke
+    translation: thank you
+    tags: polite
+  - word: bitte
+    translation: please / you're welcome
+    tags: polite
+  - word: ja
+    translation: yes
+    tags: basic
+  - word: nein
+    translation: no
+    tags: basic
+  - word: eins
+    translation: one
+    tags: numbers
+  - word: zwei
+    translation: two
+    tags: numbers
+  - word: drei
+    translation: three
+    tags: numbers
+  - word: vier
+    translation: four
+    tags: numbers
+  - word: fünf
+    translation: five
+    tags: numbers
+  - word: das Buch
+    translation: the book
+    tags: noun
+  - word: der Tisch
+    translation: the table
+    tags: noun
+  - word: das Wasser
+    translation: water
+    tags: food
+  - word: das Brot
+    translation: bread
+    tags: food
+  - word: ich
+    translation: I
+    tags: pronoun
+  - word: du
+    translation: you (informal)
+    tags: pronoun
+  - word: er / sie
+    translation: he / she
+    tags: pronoun
+  - word: wir
+    translation: we
+    tags: pronoun
+  - word: sein
+    translation: to be
+    tags: verb
+  - word: haben
+    translation: to have
+    tags: verb
+  - word: sprechen
+    translation: to speak
+    tags: verb
+  - word: groß
+    translation: big / tall
+    tags: adjective
+  - word: klein
+    translation: small
+    tags: adjective
+  - word: gut
+    translation: good
+    tags: adjective
+  - word: schlecht
+    translation: bad
+    tags: adjective

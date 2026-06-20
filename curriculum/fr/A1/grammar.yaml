@@ -1,0 +1,30 @@
+rules:
+  - rule_id: fr_A1_greetings
+    title: Basic Greetings
+    explanation: "French has formal and informal greetings. 'Bonjour' is used during the day, 'Bonsoir' in the evening. 'Salut' is casual."
+    examples: |
+      Bonjour, comment allez-vous ? (Hello, how are you? - formal)
+      Salut, ça va ? (Hi, how's it going? - informal)
+      Bonsoir, madame. (Good evening, ma'am.)
+    level: A1
+    category: greetings
+
+  - rule_id: fr_A1_articles
+    title: Definite & Indefinite Articles
+    explanation: "French articles agree with gender (masculine/feminine) and number. Le = masculine, La = feminine, Les = plural. Un/une = a/an."
+    examples: |
+      Le livre (the book - masc), La table (the table - fem)
+      Un chien (a dog), Une chatte (a cat)
+      Les enfants (the children)
+    level: A1
+    category: nouns
+
+  - rule_id: fr_A1_present_etre
+    title: Present tense of être (to be)
+    explanation: "Être is the most common French verb. Je suis, tu es, il/elle/on est, nous sommes, vous êtes, ils/elles sont."
+    examples: |
+      Je suis étudiant. (I am a student.)
+      Nous sommes fatigués. (We are tired.)
+      Elle est française. (She is French.)
+    level: A1
+    category: verbs

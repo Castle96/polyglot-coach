@@ -1,0 +1,9 @@
+rules:
+  - rule_id: es_A2_example_rule
+    title: Example Grammar Rule
+    explanation: Explain the rule here. Keep it clear and concise.
+    examples: |
+      Example sentence 1 (translation)
+      Example sentence 2 (translation)
+    level: A2
+    category: verbs

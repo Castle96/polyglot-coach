@@ -1,0 +1,29 @@
+rules:
+  - rule_id: de_A1_greetings
+    title: Basic Greetings
+    explanation: "German greetings vary by formality. 'Hallo' is neutral, 'Guten Morgen' (good morning) is formal. 'Tschüss' is casual goodbye, 'Auf Wiedersehen' is formal."
+    examples: |
+      Guten Morgen, Herr Müller. (Good morning, Mr. Müller.)
+      Hallo, wie geht's? (Hi, how's it going?)
+      Tschüss, bis morgen! (Bye, see you tomorrow!)
+    level: A1
+    category: greetings
+
+  - rule_id: de_A1_articles
+    title: Definite Articles (der, die, das)
+    explanation: "German has three grammatical genders: masculine (der), feminine (die), neuter (das). Plural is always 'die'. Always learn nouns with their article."
+    examples: |
+      der Mann (the man - masc), die Frau (the woman - fem)
+      das Kind (the child - neuter), die Kinder (the children - plural)
+    level: A1
+    category: nouns
+
+  - rule_id: de_A1_present_sein
+    title: Present tense of sein (to be)
+    explanation: "Sein is irregular. Ich bin, du bist, er/sie/es ist, wir sind, ihr seid, sie/Sie sind."
+    examples: |
+      Ich bin Student. (I am a student.)
+      Wir sind müde. (We are tired.)
+      Sie ist Lehrerin. (She is a teacher.)
+    level: A1
+    category: verbs

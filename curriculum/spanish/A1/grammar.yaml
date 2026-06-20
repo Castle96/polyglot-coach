@@ -1,0 +1,98 @@
+rules:
+  - rule_id: es_A1_ser_estar
+    title: Ser vs Estar
+    explanation: "Ser is used for permanent characteristics (identity, origin, time). Estar is used for temporary states (location, mood, condition)."
+    examples: |
+      Soy alto y rubio. (I am tall and blond.)
+      Estoy cansado hoy. (I am tired today.)
+      Es de Madrid. (He is from Madrid.)
+      Está en la cocina. (It is in the kitchen.)
+    level: A1
+    category: verbs
+
+  - rule_id: es_A1_noun_gender
+    title: Noun Gender
+    explanation: "Spanish nouns are masculine (el) or feminine (la). Masculine typically ends in -o, feminine in -a."
+    examples: |
+      El libro (the book)
+      La casa (the house)
+      El profesor (the teacher, male)
+      La profesora (the teacher, female)
+    level: A1
+    category: nouns
+
+  - rule_id: es_A1_subject_pronouns
+    title: Subject Pronouns
+    explanation: "Yo (I), tú (you informal), él/ella/usted (he/she/you formal), nosotros (we), vosotros (you pl. Spain), ellos/ellas/ustedes (they/you pl.)."
+    examples: |
+      Yo hablo español. (I speak Spanish.)
+      Tú eres inteligente. (You are smart.)
+      Ella es mexicana. (She is Mexican.)
+      Nosotros estamos contentos. (We are happy.)
+    level: A1
+    category: pronouns
+
+  - rule_id: es_A1_present_indicative_ar
+    title: Present Tense -AR Verbs
+    explanation: "Regular -AR verbs: drop -ar, add -o, -as, -a, -amos, -áis, -an."
+    examples: |
+      Hablo (I speak), hablas (you speak), habla (he/she speaks)
+      Cantamos (we sing), cantáis (you all sing), cantan (they sing)
+    level: A1
+    category: verbs
+
+  - rule_id: es_A1_present_indicative_er
+    title: Present Tense -ER Verbs
+    explanation: "Regular -ER verbs: drop -er, add -o, -es, -e, -emos, -éis, -en."
+    examples: |
+      Como (I eat), comes (you eat), come (he/she eats)
+      Vivimos (we live), vivís (you all live), viven (they live)
+    level: A1
+    category: verbs
+
+  - rule_id: es_A1_definite_articles
+    title: Definite Articles
+    explanation: "el (masculine singular), la (feminine singular), los (masculine plural), las (feminine plural)."
+    examples: |
+      El chico, la chica, los chicos, las chicas
+      El libro rojo, la mesa grande
+    level: A1
+    category: nouns
+
+  - rule_id: es_A1_indefinite_articles
+    title: Indefinite Articles
+    explanation: "un (masculine singular), una (feminine singular), unos (masculine plural), unas (feminine plural)."
+    examples: |
+      Un perro, una gata, unos libros, unas casas
+    level: A1
+    category: nouns
+
+  - rule_id: es_A1_tener_tener_que
+    title: Tener and Tener Que
+    explanation: "Tener (to have) is irregular: tengo, tienes, tiene, tenemos, tenéis, tienen. Tener que + infinitive means 'to have to do something'."
+    examples: |
+      Tengo un coche. (I have a car.)
+      Tienes que estudiar. (You have to study.)
+      Ella tiene que comer. (She has to eat.)
+    level: A1
+    category: verbs
+
+  - rule_id: es_A1_gustar
+    title: Gustar (to like)
+    explanation: "Gustar uses indirect object pronouns: me gusta(n), te gusta(n), le gusta(n), nos gusta(n), os gusta(n), les gusta(n). Use singular for one thing, plural for many."
+    examples: |
+      Me gusta el café. (I like coffee.)
+      Te gustan los libros. (You like books.)
+      Nos gusta viajar. (We like traveling.)
+    level: A1
+    category: verbs
+
+  - rule_id: es_A1_question_words
+    title: Question Words
+    explanation: "Qué (what), quién(es) (who), dónde (where), cuándo (when), por qué (why), cómo (how), cuánto/a(s) (how much/many)."
+    examples: |
+      ¿Cómo te llamas? (What's your name?)
+      ¿Dónde está el baño? (Where is the bathroom?)
+      ¿Cuánto cuesta? (How much does it cost?)
+    level: A1
+    category: syntax

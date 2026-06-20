@@ -1,0 +1,50 @@
+locale_overrides:
+  - locale: es_MX
+    standard_word: ordenador
+    local_word: computadora
+    notes: Mexico uses computadora instead of ordenador
+  - locale: es_MX
+    standard_word: coche
+    local_word: carro
+    notes: Carro is common in Mexico and Latin America
+  - locale: es_MX
+    standard_word: zumo
+    local_word: jugo
+    notes: Jugo is used in Mexico for juice
+  - locale: es_MX
+    standard_word: patata
+    local_word: papa
+    notes: Papa is used throughout Latin America
+  - locale: es_MX
+    standard_word: vale
+    local_word: está bien
+    notes: "Está bien or sale is more common in Mexico than vale"
+  - locale: es_MX
+    standard_word: coger
+    local_word: tomar
+    notes: Coger has vulgar connotations in Mexico, use tomar
+  - locale: es_MX
+    standard_word: vosotros
+    local_word: ustedes
+    notes: Ustedes is used for all plural you in Mexico
+  - locale: es_MX
+    standard_word: guapa
+    local_word: linda
+    notes: Linda is more common than guapa in casual Mexican speech
+
+pronunciation_profiles:
+  - locale: es_ES
+    name: Castilian Spanish
+    features:
+      - "distinción — c/z pronounced as /θ/ (th-sound)"
+      - "ceceo — seseo distinction"
+      - "vosotros — distinct 2nd person plural"
+      - "jota — strong velar fricative /x/"
+  - locale: es_MX
+    name: Mexican Spanish
+    features:
+      - "seseo — c/z pronounced as /s/"
+      - "ustedes only — no vosotros"
+      - "diminutives — -ito/-ita very common"
+      - "jota — softer than Castilian"
+      - "ll/y — yeísmo, both pronounced as /ʝ/"

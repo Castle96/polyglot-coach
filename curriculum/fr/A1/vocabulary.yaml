@@ -1,0 +1,85 @@
+words:
+  - word: bonjour
+    translation: hello / good morning
+    tags: greetings
+  - word: salut
+    translation: hi (informal)
+    tags: greetings
+  - word: au revoir
+    translation: goodbye
+    tags: greetings
+  - word: merci
+    translation: thank you
+    tags: polite
+  - word: s'il vous plaît
+    translation: please (formal)
+    tags: polite
+  - word: oui
+    translation: yes
+    tags: basic
+  - word: non
+    translation: no
+    tags: basic
+  - word: un
+    translation: one / a (masc)
+    tags: numbers
+  - word: deux
+    translation: two
+    tags: numbers
+  - word: trois
+    translation: three
+    tags: numbers
+  - word: quatre
+    translation: four
+    tags: numbers
+  - word: cinq
+    translation: five
+    tags: numbers
+  - word: le livre
+    translation: the book
+    tags: noun
+  - word: la table
+    translation: the table
+    tags: noun
+  - word: l'eau
+    translation: water
+    tags: food
+  - word: le pain
+    translation: bread
+    tags: food
+  - word: je
+    translation: I
+    tags: pronoun
+  - word: tu
+    translation: you (informal)
+    tags: pronoun
+  - word: il / elle
+    translation: he / she
+    tags: pronoun
+  - word: nous
+    translation: we
+    tags: pronoun
+  - word: être
+    translation: to be
+    tags: verb
+  - word: avoir
+    translation: to have
+    tags: verb
+  - word: parler
+    translation: to speak
+    tags: verb
+  - word: regarder
+    translation: to watch / look at
+    tags: verb
+  - word: grand
+    translation: big / tall
+    tags: adjective
+  - word: petit
+    translation: small
+    tags: adjective
+  - word: bon / bonne
+    translation: good
+    tags: adjective
+  - word: mauvais / mauvaise
+    translation: bad
+    tags: adjective

@@ -1,0 +1,7 @@
+scenarios:
+  - title: "German A1: Example scenario"
+    context: "Describe the scenario here. What is happening? Where are they?"
+    level: A1
+    roles: "Role1, Role2"
+    vocabulary_hints: "word1, word2, phrase1"
+    grammar_focus: "grammar-rule-id-1, grammar-rule-id-2"

@@ -1,0 +1,42 @@
+scenarios:
+  - title: "Saludos: Conocer a alguien nuevo"
+    context: "You are meeting someone for the first time at a language exchange. Introduce yourself, ask their name, where they are from, and how they are."
+    level: A1
+    roles: "Tú, Nueva persona"
+    vocabulary_hints: "hola, buenos días, me llamo, mucho gusto, ¿cómo estás?, bien, gracias, de dónde eres"
+    grammar_focus: "ser, llamarse, estar, subject pronouns"
+
+  - title: "En el restaurante: Pedir comida"
+    context: "You are at a restaurant in Madrid. Order a meal, ask for the bill, and comment on the food."
+    level: A1
+    roles: "Cliente, Camarero"
+    vocabulary_hints: "camarero, la cuenta, la comida, el menú, quisiera, por favor, gracias, delicioso"
+    grammar_focus: "quisiera (conditional), present tense -AR/-ER verbs, definite articles"
+
+  - title: "De compras: Comprar ropa"
+    context: "You are shopping for clothes at a market. Ask about prices, colors, and sizes."
+    level: A1
+    roles: "Cliente, Vendedor"
+    vocabulary_hints: "cuánto cuesta, caro, barato, rojo, azul, verde, grande, pequeño, tener"
+    grammar_focus: "tener, question words, noun-adjective agreement, indefinite articles"
+
+  - title: "La familia: Describir a tu familia"
+    context: "You are looking at photos with a new friend. Describe your family members — who they are, their ages, and what they are like."
+    level: A1
+    roles: "Tú, Amigo"
+    vocabulary_hints: "madre, padre, hermano, hermana, abuelo, abuela, años, alto, bajo, simpático"
+    grammar_focus: "ser, tener, possessive adjectives (mi, tu, su), gender/number agreement"
+
+  - title: "La rutina diaria: Tu día típico"
+    context: "Describe your daily routine to a classmate. What time do you wake up, eat breakfast, go to class or work?"
+    level: A1
+    roles: "Tú, Compañero de clase"
+    vocabulary_hints: "me despierto, desayuno, voy, clase, trabajo, vuelvo, ceno, me acuesto, hora"
+    grammar_focus: "present tense regular verbs, time expressions, me gusta + infinitive"
+
+  - title: "En la ciudad: Pedir direcciones"
+    context: "You are lost in a Spanish city. Ask for directions to a specific place — museum, train station, or hotel."
+    level: A1
+    roles: "Turista, Local"
+    vocabulary_hints: "dónde está, a la izquierda, a la derecha, recto, cerca, lejos, la calle, la plaza"
+    grammar_focus: "estar for location, hay, question words, ir + a"

@@ -1,0 +1,6 @@
+language: fr
+name: French
+levels:
+  - A1
+locales:
+  - neutral

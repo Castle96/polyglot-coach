@@ -1,0 +1,7 @@
+locale_overrides: []
+
+pronunciation_profiles:
+  - locale: neutral
+    name: Standard French
+    features:
+      - "neutral pronunciation"
