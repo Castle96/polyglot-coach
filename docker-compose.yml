@@ -1,0 +1,20 @@
+services:
+  polyglot-coach:
+    build: .
+    container_name: polyglot-coach
+
+    restart: unless-stopped
+
+    ports:
+      - "8004:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    volumes:
+      - ./storage:/app/storage
+      - ./profiles:/app/profiles
+      - ./curriculum:/app/curriculum
+
+    environment:
+      TZ: America/Chicago
+      OLLAMA_HOST: http://host.docker.internal:11434

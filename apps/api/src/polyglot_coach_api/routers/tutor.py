@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import func
 
-from polyglot_coach_api.services.llm import generate_tutor_response, is_llm_available
+from polyglot_coach_api.services.llm import TutorResult, generate_tutor_response, is_llm_available
 from polyglot_coach_shared.database import get_session
 from polyglot_coach_shared.models import VocabularyEntry
 
@@ -14,12 +16,20 @@ class ChatRequest(BaseModel):
     message: str
     language: str
     level: str = "A1"
+    mode: str = "conversation"
+    locale: str = "neutral"
     conversation_history: list[dict] | None = None
+
+
+class CorrectionItem(BaseModel):
+    correction: str = ""
+    why: str = ""
+    alternative: str = ""
 
 
 class ChatResponse(BaseModel):
     reply: str
-    corrections: list[str] | None = None
+    corrections: list[CorrectionItem] | None = None
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -27,13 +37,21 @@ async def api_tutor_chat(body: ChatRequest):
     if not is_llm_available():
         raise HTTPException(503, "LLM model not loaded. Set POLYGLOT_LLM_MODEL_PATH and restart.")
 
-    reply = generate_tutor_response(
+    result: TutorResult = generate_tutor_response(
         message=body.message,
         language=body.language,
         level=body.level,
         history=body.conversation_history or [],
+        profile_id=body.profile_id,
+        mode=body.mode,
+        locale=body.locale,
     )
-    return ChatResponse(reply=reply, corrections=None)
+    corrections = [
+        CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
+        for c in result.corrections
+    ] if result.corrections else None
+
+    return ChatResponse(reply=result.reply, corrections=corrections)
 
 
 @router.get("/quick-chat", response_model=ChatResponse)
@@ -41,6 +59,8 @@ async def api_quick_chat(
     message: str = Query(..., description="User's message"),
     language: str = Query(..., description="Target language code (es, fr, de)"),
     level: str = Query("A1", description="CEFR level"),
+    mode: str = Query("conversation", description="Learning mode (conversation, lesson, grammar, vocabulary, roleplay, assessment, immersion)"),
+    locale: str = Query("neutral", description="Locale code (e.g. es_MX, fr_CA)"),
 ):
     """Lightweight chat endpoint for constrained devices (ESP32-C3 etc).
 
@@ -48,14 +68,25 @@ async def api_quick_chat(
     Falls back to curriculum-based responses when LLM is unavailable.
     """
     if is_llm_available():
-        reply = generate_tutor_response(message=message, language=language, level=level, history=[])
-        return ChatResponse(reply=reply, corrections=None)
+        result: TutorResult = generate_tutor_response(
+            message=message,
+            language=language,
+            level=level,
+            history=[],
+            mode=mode,
+            locale=locale,
+        )
+        corrections = [
+            CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
+            for c in result.corrections
+        ] if result.corrections else None
+        return ChatResponse(reply=result.reply, corrections=corrections)
 
     session = get_session()
     total = session.query(func.count(VocabularyEntry.id)).filter(
         VocabularyEntry.language == language,
     ).scalar()
-    corrections = []
+    corrections = None
     reply = ""
     if total:
         word = session.query(VocabularyEntry).filter(

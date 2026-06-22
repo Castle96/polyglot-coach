@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy import text as db_text
 
 from pathlib import Path
@@ -42,10 +43,12 @@ app.include_router(review.router, prefix="/api/v1/review", tags=["review"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(tutor.router, prefix="/api/v1/tutor", tags=["tutor"])
 
+WEB_ROOT = Path(__file__).resolve().parents[4] / "apps" / "web"
+
 
 @app.get("/")
 async def root():
-    return {"service": "Polyglot Coach API", "version": "0.1.0"}
+    return FileResponse(WEB_ROOT / "index.html")
 
 
 @app.get("/health")

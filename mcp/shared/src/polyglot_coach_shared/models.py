@@ -24,6 +24,7 @@ class LearnerProfile(Base):
     progress = relationship("ProgressRecord", back_populates="profile", cascade="all, delete-orphan")
     review_items = relationship("ReviewItem", back_populates="profile", cascade="all, delete-orphan")
     vocabulary = relationship("VocabularyEntry", back_populates="profile", cascade="all, delete-orphan")
+    sessions = relationship("Session", back_populates="profile", cascade="all, delete-orphan")
 
 
 class VocabularyEntry(Base):
@@ -121,3 +122,17 @@ class ConversationScenario(Base):
     roles = Column(String(500), nullable=True)
     vocabulary_hints = Column(Text, nullable=True)
     grammar_focus = Column(Text, nullable=True)
+
+
+class Session(Base):
+    __tablename__ = "sessions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    profile_id = Column(Integer, ForeignKey("learner_profiles.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    language = Column(String(10), nullable=False)
+    state = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    profile = relationship("LearnerProfile", back_populates="sessions")

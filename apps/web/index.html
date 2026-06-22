@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polyglot Coach</title>
+<style>
+  :root {
+    --base: #1e1e2e;
+    --mantle: #181825;
+    --crust: #11111b;
+    --surface0: #313244;
+    --surface1: #45475a;
+    --surface2: #585b70;
+    --overlay0: #6c7086;
+    --overlay1: #7f849c;
+    --overlay2: #9399b2;
+    --subtext0: #a6adc8;
+    --subtext1: #bac2de;
+    --text: #cdd6f4;
+    --lavender: #b4befe;
+    --blue: #89b4fa;
+    --sapphire: #74c7ec;
+    --teal: #94e2d5;
+    --green: #a6e3a1;
+    --yellow: #f9e2af;
+    --peach: #fab387;
+    --maroon: #eba0ac;
+    --red: #f38ba8;
+    --mauve: #cba6f7;
+    --pink: #f5c2e7;
+    --flamingo: #f2cdcd;
+    --rosewater: #f5e0dc;
+    --radius: 12px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--base);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--mantle);
+    border-bottom: 1px solid var(--surface1);
+    flex-shrink: 0;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--mauve);
+    letter-spacing: -0.3px;
+  }
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--overlay1);
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--surface2);
+    transition: background 0.3s;
+  }
+  .status-dot.online { background: var(--green); }
+  .status-dot.offline { background: var(--red); }
+
+  /* Layout */
+  .layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .messages:empty::after {
+    content: 'Start a conversation to begin learning.';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--overlay0);
+    font-style: italic;
+    font-size: 14px;
+  }
+
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    line-height: 1.5;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .msg.user {
+    align-self: flex-end;
+    background: var(--mauve);
+    color: var(--base);
+    border-bottom-right-radius: 4px;
+  }
+  .msg.tutor {
+    align-self: flex-start;
+    background: var(--surface0);
+    border-bottom-left-radius: 4px;
+  }
+  .msg.tutor .correction {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--surface2);
+    font-size: 13px;
+    color: var(--yellow);
+  }
+  .msg.tutor .correction .label { color: var(--overlay2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .msg.tutor .correction .why { color: var(--subtext0); margin-top: 2px; }
+  .msg.tutor .correction .alt { color: var(--teal); margin-top: 2px; }
+
+  .msg.loading {
+    align-self: flex-start;
+    background: var(--surface0);
+    border-bottom-left-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--surface2);
+    border-top-color: var(--mauve);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Input */
+  .input-bar {
+    padding: 12px 20px;
+    background: var(--mantle);
+    border-top: 1px solid var(--surface1);
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .input-bar input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--surface1);
+    border-radius: var(--radius);
+    background: var(--surface0);
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-bar input:focus { border-color: var(--mauve); }
+  .input-bar input::placeholder { color: var(--overlay0); }
+  .input-bar button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--mauve);
+    color: var(--base);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-family: var(--font);
+  }
+  .input-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .input-bar button:not(:disabled):hover { opacity: 0.9; }
+
+  /* Settings sidebar */
+  .sidebar {
+    width: 260px;
+    background: var(--mantle);
+    border-left: 1px solid var(--surface1);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--overlay1);
+    margin-bottom: 2px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: var(--overlay1); font-weight: 500; }
+  .field select, .field input {
+    padding: 8px 10px;
+    border: 1px solid var(--surface1);
+    border-radius: 8px;
+    background: var(--surface0);
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field select:focus, .field input:focus { border-color: var(--mauve); }
+  .field select option { background: var(--surface0); color: var(--text); }
+  .btn-secondary {
+    padding: 8px 14px;
+    border: 1px solid var(--surface1);
+    border-radius: 8px;
+    background: var(--surface0);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    font-family: var(--font);
+  }
+  .btn-secondary:hover { border-color: var(--mauve); background: var(--surface1); }
+
+  .profile-row { display: flex; gap: 6px; }
+  .profile-row input { flex: 1; }
+  .profile-row button { flex-shrink: 0; }
+
+  .sidebar-status { font-size: 12px; color: var(--overlay0); padding-top: 8px; border-top: 1px solid var(--surface1); }
+  .sidebar-status .good { color: var(--green); }
+  .sidebar-status .bad { color: var(--red); }
+
+  @media (max-width: 720px) {
+    .sidebar { display: none; }
+    .msg { max-width: 90%; }
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: var(--surface1);
+    color: var(--text);
+    font-size: 13px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Polyglot Coach</h1>
+  <div class="header-status">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusLabel">Checking...</span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="chat-area">
+    <div class="messages" id="messages"></div>
+    <div class="input-bar">
+      <input type="text" id="chatInput" placeholder="Type a message..." autofocus>
+      <button id="sendBtn" disabled>Send</button>
+    </div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div>
+      <h2>Profile</h2>
+      <div class="field profile-row">
+        <input type="text" id="profileInput" placeholder="Your name" value="Learner">
+        <button class="btn-secondary" id="profileBtn">Load</button>
+      </div>
+      <div style="font-size:11px;color:var(--overlay0);margin-top:4px" id="profileId"></div>
+    </div>
+
+    <div>
+      <h2>Session</h2>
+      <div class="field">
+        <label for="langSelect">Language</label>
+        <select id="langSelect">
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="ja">Japanese</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="levelSelect">Level</label>
+        <select id="levelSelect">
+          <option value="A1">A1 — Beginner</option>
+          <option value="A2">A2 — Elementary</option>
+          <option value="B1">B1 — Intermediate</option>
+          <option value="B2">B2 — Upper Intermediate</option>
+          <option value="C1">C1 — Advanced</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="modeSelect">Mode</label>
+        <select id="modeSelect">
+          <option value="conversation">Conversation</option>
+          <option value="lesson">Lesson</option>
+          <option value="grammar">Grammar Focus</option>
+          <option value="vocabulary">Vocabulary Focus</option>
+          <option value="roleplay">Roleplay</option>
+          <option value="assessment">Assessment</option>
+          <option value="immersion">Immersion</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="localeSelect">Locale</label>
+        <select id="localeSelect">
+          <option value="neutral">Neutral</option>
+          <option value="es_ES">Spain (es_ES)</option>
+          <option value="es_MX">Mexico (es_MX)</option>
+          <option value="fr_FR">France (fr_FR)</option>
+          <option value="fr_CA">Canada (fr_CA)</option>
+          <option value="de_DE">Germany (de_DE)</option>
+          <option value="ja_JP">Japan (ja_JP)</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <h2>Quick Start</h2>
+      <button class="btn-secondary" id="scenarioBtn" style="width:100%">Load Scenario</button>
+    </div>
+
+    <div class="sidebar-status" id="sidebarStatus"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.origin;
+
+// State
+let profileId = parseInt(localStorage.getItem('pc_profile_id')) || null;
+let profileName = localStorage.getItem('pc_profile_name') || 'Learner';
+let conversationHistory = [];
+const msgContainer = document.getElementById('messages');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const statusDot = document.getElementById('statusDot');
+const statusLabel = document.getElementById('statusLabel');
+
+// Init
+document.getElementById('profileInput').value = profileName;
+if (profileId) document.getElementById('profileId').textContent = `ID: ${profileId}`;
+
+// Load scenario
+document.getElementById('scenarioBtn').addEventListener('click', async () => {
+  const lang = document.getElementById('langSelect').value;
+  const level = document.getElementById('levelSelect').value;
+  try {
+    const res = await fetch(`${API}/api/v1/curriculum/lessons?language=${lang}&level=${level}`);
+    const data = await res.json();
+    const scenarios = data.scenarios || [];
+    if (!scenarios.length) { showToast('No scenarios found for this level.'); return; }
+    const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
+    document.getElementById('modeSelect').value = 'roleplay';
+    addMessage(`Scenario: ${sc.title}\n\n${sc.context}`, 'tutor');
+  } catch { showToast('Could not load scenarios.'); }
+});
+
+// Profile management
+document.getElementById('profileBtn').addEventListener('click', loadProfile);
+document.getElementById('profileInput').addEventListener('keydown', e => { if (e.key === 'Enter') loadProfile(); });
+
+async function loadProfile() {
+  const name = document.getElementById('profileInput').value.trim() || 'Learner';
+  try {
+    let res = await fetch(`${API}/api/v1/learner/profiles/${encodeURIComponent(name)}`);
+    if (res.status === 404) {
+      const lang = document.getElementById('langSelect').value;
+      const level = document.getElementById('levelSelect').value;
+      res = await fetch(`${API}/api/v1/learner/profiles`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, native_language: 'en', target_language: lang, locale: 'neutral', proficiency_level: level }),
+      });
+      if (!res.ok) { showToast('Failed to create profile.'); return; }
+    } else if (!res.ok) { showToast('Failed to load profile.'); return; }
+    const profile = await res.json();
+    profileId = profile.id;
+    profileName = profile.name;
+    localStorage.setItem('pc_profile_id', profileId);
+    localStorage.setItem('pc_profile_name', profileName);
+    document.getElementById('profileId').textContent = `ID: ${profileId}`;
+    document.getElementById('langSelect').value = profile.target_language || 'es';
+    document.getElementById('levelSelect').value = profile.proficiency_level || 'A1';
+    document.getElementById('localeSelect').value = profile.locale || 'neutral';
+    showToast(`Profile "${profileName}" loaded.`);
+  } catch { showToast('Could not connect to server.'); }
+}
+
+// Chat
+sendBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }});
+
+async function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text || sendBtn.disabled) return;
+
+  addMessage(text, 'user');
+  chatInput.value = '';
+  sendBtn.disabled = true;
+
+  const loadingId = addLoading();
+
+  try {
+    const settings = getSettings();
+    const res = await fetch(`${API}/api/v1/tutor/chat`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        profile_id: profileId || 1,
+        message: text,
+        language: settings.lang,
+        level: settings.level,
+        mode: settings.mode,
+        locale: settings.locale,
+        conversation_history: conversationHistory,
+      }),
+    });
+
+    removeLoading(loadingId);
+
+    if (!res.ok) {
+      addMessage(`Error: ${res.status} — ${res.statusText}`, 'tutor');
+      return;
+    }
+
+    const data = await res.json();
+    const tutorText = data.reply || '(no response)';
+    let html = escapeHtml(tutorText);
+
+    if (data.corrections && data.corrections.length > 0) {
+      for (const c of data.corrections) {
+        html += '<div class="correction">';
+        if (c.correction) html += `<div class="label">Correction</div><div>${escapeHtml(c.correction)}</div>`;
+        if (c.why) html += `<div class="why">${escapeHtml(c.why)}</div>`;
+        if (c.alternative) html += `<div class="alt">Alternative: ${escapeHtml(c.alternative)}</div>`;
+        html += '</div>';
+      }
+    }
+
+    addMessage(html, 'tutor');
+    conversationHistory.push({ role: 'user', content: text });
+    conversationHistory.push({ role: 'assistant', content: tutorText });
+    if (conversationHistory.length > 50) conversationHistory = conversationHistory.slice(-50);
+  } catch {
+    removeLoading(loadingId);
+    addMessage('Connection error — is the server running?', 'tutor');
+  } finally {
+    sendBtn.disabled = false;
+    chatInput.focus();
+  }
+}
+
+function addMessage(text, role) {
+  const el = document.createElement('div');
+  el.className = `msg ${role}`;
+  if (role === 'tutor') el.innerHTML = text;
+  else el.textContent = text;
+  msgContainer.appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth' });
+  return el;
+}
+
+function addLoading() {
+  const el = document.createElement('div');
+  el.className = 'msg loading';
+  el.id = 'loading-msg';
+  el.innerHTML = '<div class="spinner"></div> Thinking...';
+  msgContainer.appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth' });
+  return 'loading-msg';
+}
+
+function removeLoading(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function getSettings() {
+  return {
+    lang: document.getElementById('langSelect').value,
+    level: document.getElementById('levelSelect').value,
+    mode: document.getElementById('modeSelect').value,
+    locale: document.getElementById('localeSelect').value,
+  };
+}
+
+// Health check
+async function checkHealth() {
+  try {
+    const res = await fetch(`${API}/health`);
+    const data = await res.json();
+    const llmOk = data.llm_available;
+    statusDot.className = 'status-dot ' + (llmOk ? 'online' : 'offline');
+    statusLabel.textContent = llmOk ? 'LLM ready' : 'LLM unavailable';
+    statusLabel.style.color = llmOk ? 'var(--green)' : 'var(--red)';
+    document.getElementById('sidebarStatus').innerHTML =
+      `<span class="${data.db_connected ? 'good' : 'bad'}">DB: ${data.db_connected ? 'connected' : 'disconnected'}</span>` +
+      ` &middot; <span class="${llmOk ? 'good' : 'bad'}">LLM: ${llmOk ? 'ready' : 'offline'}</span>` +
+      (data.curriculum_loaded ? '' : ' &middot; <span class="bad">No curriculum</span>');
+    sendBtn.disabled = !llmOk;
+  } catch {
+    statusDot.className = 'status-dot offline';
+    statusLabel.textContent = 'Offline';
+    document.getElementById('sidebarStatus').textContent = 'Server unreachable';
+    sendBtn.disabled = true;
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Auto-load profile on startup if stored
+if (profileId) {
+  // Re-fetch to get latest settings
+  fetch(`${API}/api/v1/learner/profiles/${encodeURIComponent(profileName)}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(p => {
+      if (p) {
+        document.getElementById('langSelect').value = p.target_language || 'es';
+        document.getElementById('levelSelect').value = p.proficiency_level || 'A1';
+        document.getElementById('localeSelect').value = p.locale || 'neutral';
+      }
+    })
+    .catch(() => {});
+}
+
+checkHealth();
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>

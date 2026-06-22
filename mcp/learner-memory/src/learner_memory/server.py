@@ -6,7 +6,7 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import ServerCapabilities, TextContent, Tool
 
-from learner_memory import get_profile, get_progress, record_mistake, update_profile
+from learner_memory import delete_session, export_anki_deck, export_vocabulary_csv, export_vocabulary_json, get_profile, get_progress, list_sessions, load_session, record_mistake, save_session, update_profile
 
 server = Server("learner-memory")
 
@@ -70,6 +70,91 @@ async def handle_list_tools() -> list[Tool]:
                 "required": ["profile_id"],
             },
         ),
+        Tool(
+            name="save_session",
+            description="Save a learner's conversation session state",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "profile_id": {"type": "integer", "description": "Profile ID"},
+                    "title": {"type": "string", "description": "Session title"},
+                    "language": {"type": "string", "description": "Language code (e.g. 'es', 'ja')"},
+                    "state": {"type": "string", "description": "JSON string of conversation state"},
+                    "session_id": {"type": "integer", "description": "Existing session ID to update (optional)"},
+                },
+                "required": ["profile_id", "title", "language", "state"],
+            },
+        ),
+        Tool(
+            name="list_sessions",
+            description="List saved sessions for a learner, with optional fuzzy search",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "profile_id": {"type": "integer", "description": "Profile ID"},
+                    "language": {"type": "string", "description": "Filter by language (optional)"},
+                    "query": {"type": "string", "description": "Fuzzy search query for session titles"},
+                    "limit": {"type": "integer", "description": "Max results (default 20)"},
+                },
+                "required": ["profile_id"],
+            },
+        ),
+        Tool(
+            name="load_session",
+            description="Load a saved session by ID",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "session_id": {"type": "integer", "description": "Session ID to load"},
+                },
+                "required": ["session_id"],
+            },
+        ),
+        Tool(
+            name="delete_session",
+            description="Delete a saved session",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "session_id": {"type": "integer", "description": "Session ID to delete"},
+                },
+                "required": ["session_id"],
+            },
+        ),
+        Tool(
+            name="export_vocabulary_json",
+            description="Export vocabulary as JSON",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "profile_id": {"type": "integer", "description": "Profile ID"},
+                },
+                "required": ["profile_id"],
+            },
+        ),
+        Tool(
+            name="export_vocabulary_csv",
+            description="Export vocabulary as CSV",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "profile_id": {"type": "integer", "description": "Profile ID"},
+                },
+                "required": ["profile_id"],
+            },
+        ),
+        Tool(
+            name="export_anki_deck",
+            description="Export vocabulary as Anki deck (tab-separated)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "profile_id": {"type": "integer", "description": "Profile ID"},
+                    "language": {"type": "string", "description": "Filter by language (optional)"},
+                },
+                "required": ["profile_id"],
+            },
+        ),
     ]
 
 
@@ -85,6 +170,20 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             result = record_mistake(**arguments)
         case "get_progress":
             result = get_progress(**arguments)
+        case "save_session":
+            result = save_session(**arguments)
+        case "list_sessions":
+            result = list_sessions(**arguments)
+        case "load_session":
+            result = load_session(**arguments)
+        case "delete_session":
+            result = delete_session(**arguments)
+        case "export_vocabulary_json":
+            result = export_vocabulary_json(**arguments)
+        case "export_vocabulary_csv":
+            result = export_vocabulary_csv(**arguments)
+        case "export_anki_deck":
+            result = export_anki_deck(**arguments)
         case _:
             raise ValueError(f"Unknown tool: {name}")
 
