@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: polyglot-coach
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://d8ee3e97497fc9e965e1c4f43f9b250bab37ca4e@gitea.esp32-dev.svc:3000/Castle96/polyglot-coach.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: polyglot-coach
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
