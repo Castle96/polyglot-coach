@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polyglot-coach
+  namespace: polyglot-coach
+  labels:
+    app: polyglot-coach
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polyglot-coach
+  template:
+    metadata:
+      labels:
+        app: polyglot-coach
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: polyglot-coach
+          image: 100.120.207.67:30529/castle96/polyglot-coach:latest
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: TZ
+              value: America/Chicago
+            - name: OLLAMA_HOST
+              value: http://ollama-svc.esp32-dev.svc:11434
+            - name: PYTHONPATH
+              value: /app
+          volumeMounts:
+            - name: storage
+              mountPath: /app/storage
+            - name: profiles
+              mountPath: /app/profiles
+            - name: curriculum
+              mountPath: /app/curriculum
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: polyglot-coach-storage
+        - name: profiles
+          persistentVolumeClaim:
+            claimName: polyglot-coach-profiles
+        - name: curriculum
+          persistentVolumeClaim:
+            claimName: polyglot-coach-curriculum
