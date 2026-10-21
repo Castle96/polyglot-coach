@@ -34,7 +34,7 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "language": {"type": "string", "description": "Language code"},
                     "category": {"type": "string", "description": "Grammar category (e.g. 'verbs', 'nouns')"},
-                    "level": {"type": "string", "description": "CEFR level"},
+                    "level": {"type": "string", "description": "Level within the language's framework"},
                 },
                 "required": ["language", "category", "level"],
             },

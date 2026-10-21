@@ -7,8 +7,8 @@ This project focuses on local-first, offline-capable language learning powered b
 
 - Python 3.12+
 - [uv](https://github.com/astral-sh/uv)
-- Node 20+
-- [pnpm](https://pnpm.io/)
+- Node 20+ and [pnpm](https://pnpm.io/) only when working on packaged frontend
+  code; the current web client is static and served by FastAPI
 
 ## Setup
 
@@ -16,19 +16,23 @@ This project focuses on local-first, offline-capable language learning powered b
 git clone https://github.com/Castle96/polyglot-coach.git
 cd polyglot-coach
 uv sync
-pnpm install
 ```
+
+`pnpm install` is not required for the current static web client. The workspace
+scripts will become relevant once `apps/web` and `apps/desktop` contain their
+own `package.json` files.
 
 ## Project Structure Overview
 
 - `apps/` contains the desktop, web, and API application entry points.
 - `mcp/` contains Python MCP services using a `src/` layout.
 - `profiles/` stores language profile configuration files.
-- `curriculum/` stores level-based curriculum and scenario data.
+- `curriculum/` stores the registry, language packs, and level-based content.
 - `datasets/` stores structured vocabulary, grammar, and example datasets.
-- `models/` documents local model assets for LLM, STT, and TTS components.
+- `models/` documents local model assets and the Piper voice manifest.
 - `storage/` contains SQLite data files and migration assets.
 - `docs/` contains architecture, curriculum, MCP, and API documentation.
+- `tools/` contains curriculum validation, generation, and voice download scripts.
 
 ## Running MCP Services Locally
 
@@ -45,8 +49,19 @@ or Python entrypoint conventions as the implementation is added.
 ## Testing
 
 - Use `pytest` for Python MCP services.
-- Add JavaScript or TypeScript tests alongside the relevant apps as the frontend and API layers are introduced.
-- Run the full repository checks before opening a pull request when executable code is added.
+- Validate curriculum changes with `uv run python tools/validate_curriculum.py`.
+- Add JavaScript or TypeScript tests alongside the relevant apps as packaged
+  frontend code is introduced.
+- Run the full repository checks before opening a pull request:
+  `uv run python tools/validate_curriculum.py && uv run pytest`.
+
+## Adding a Language
+
+Add a language pack under `curriculum/<iso-code>/`, enable it in
+`curriculum/registry.yaml`, and add voice assets to
+`models/tts/voices.yaml` when TTS is supported. Do not list a level or language
+as supported until its content exists and the validator passes. See
+[docs/curriculum/README.md](docs/curriculum/README.md) for the schema.
 
 ## Branch Naming Conventions
 

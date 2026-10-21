@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from polyglot_coach_api.validation import resolve_language_request
 from polyglot_coach_shared.database import get_session
 from polyglot_coach_shared.models import LearnerProfile
 from learner_memory import get_profile, get_progress, record_mistake, update_profile
@@ -10,10 +11,10 @@ router = APIRouter()
 
 class ProfileCreate(BaseModel):
     name: str
-    native_language: str
+    native_language: str = "en"
     target_language: str
-    locale: str = "neutral"
-    proficiency_level: str = "A1"
+    locale: str | None = None
+    proficiency_level: str | None = None
 
 
 class ProfileUpdate(BaseModel):
@@ -35,8 +36,17 @@ class MistakeCreate(BaseModel):
 
 @router.post("/profiles", status_code=201)
 def api_create_profile(body: ProfileCreate):
+    _, level, locale = resolve_language_request(
+        body.target_language,
+        level=body.proficiency_level,
+        locale=body.locale,
+    )
+    data = body.model_dump()
+    data["proficiency_level"] = level
+    data["locale"] = locale
+
     session = get_session()
-    profile = LearnerProfile(**body.model_dump())
+    profile = LearnerProfile(**data)
     session.add(profile)
     session.commit()
     session.close()
@@ -53,6 +63,17 @@ def api_get_profile(name: str):
 
 @router.patch("/profiles/{profile_id}")
 def api_update_profile(profile_id: int, body: ProfileUpdate):
+    session = get_session()
+    current = session.query(LearnerProfile).filter(LearnerProfile.id == profile_id).first()
+    session.close()
+    if current is None:
+        raise HTTPException(404, "Profile not found")
+
+    resolve_language_request(
+        body.target_language or current.target_language,
+        level=body.proficiency_level or current.proficiency_level,
+        locale=body.locale or current.locale,
+    )
     result = update_profile(profile_id=profile_id, **body.model_dump(exclude_none=True))
     if result is None:
         raise HTTPException(404, "Profile not found")

@@ -1,7 +1,21 @@
 scenarios:
-  - title: "French A1: Example scenario"
-    context: "Describe the scenario here. What is happening? Where are they?"
+  - title: "Au café : Commander une boisson"
+    context: "You are at a café in Paris. Greet the server, order a drink, ask for the bill, and thank them."
     level: A1
-    roles: "Role1, Role2"
-    vocabulary_hints: "word1, word2, phrase1"
-    grammar_focus: "grammar-rule-id-1, grammar-rule-id-2"
+    roles: "Client, Serveur"
+    vocabulary_hints: "bonjour, un café, un thé, s'il vous plaît, merci, l'addition"
+    grammar_focus: "fr_A1_greetings, definite articles, polite requests"
+
+  - title: "Se présenter : Rencontrer quelqu'un"
+    context: "You meet a new classmate. Introduce yourself, ask their name, where they are from, and how they are."
+    level: A1
+    roles: "Étudiant, Nouvel étudiant"
+    vocabulary_hints: "je m'appelle, comment tu t'appelles, je suis, d'où viens-tu, ça va"
+    grammar_focus: "fr_A1_greetings, être, s'appeler, subject pronouns"
+
+  - title: "Au marché : Acheter des fruits"
+    context: "You are at a market. Ask for fruit, say how much you want, ask the price, and pay."
+    level: A1
+    roles: "Client, Marchand"
+    vocabulary_hints: "je voudrais, des pommes, un kilo, combien, ça coûte, merci"
+    grammar_focus: "fr_A1_articles, partitive articles, numbers"

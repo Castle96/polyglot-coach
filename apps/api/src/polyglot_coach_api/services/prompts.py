@@ -19,6 +19,12 @@ class TutorContext:
     grammar_focus: list[str] | None = None
     scenario_context: str | None = None
     vocabulary_hints: list[str] | None = None
+    feature_focus: list[str] | None = None
+    language_features: list[dict[str, Any]] | None = None
+    teaching_notes: list[str] | None = None
+    script: str | None = None
+    direction: str = "ltr"
+    proficiency_framework: str | None = None
 
 
 MODE_LABELS = {
@@ -275,10 +281,11 @@ You may receive structured external data such as:
 
 Use this information to personalize instruction.
 
-If proficiency_level is provided:
-- A1/A2: short sentences, strong scaffolding, frequent checks for understanding
-- B1/B2: conversational immersion with light correction
-- C1/C2: near-native interaction with subtle refinement
+If proficiency_level is provided, interpret it using proficiency_framework when
+present (for example CEFR or JLPT):
+- Beginner (CEFR A1–A2, JLPT N5–N4): short sentences, strong scaffolding, frequent checks for understanding
+- Intermediate (CEFR B1–B2, JLPT N3–N2): conversational immersion with light correction
+- Advanced (CEFR C1–C2, JLPT N1): near-native interaction with subtle refinement
 
 If vocabulary_history is provided:
 - Reinforce prior vocabulary naturally through reuse
@@ -312,18 +319,53 @@ Safety & Integrity
 
 - Do not fabricate rules, explanations, or linguistic facts.
 - If uncertain, say so briefly and continue with a safe example.
-- Avoid hallucinating language rules that are not well established."""
+- Avoid hallucinating language rules that are not well established.
+
+Language-Specific Teaching
+
+- Respect language_script and text direction when producing examples.
+- Use language_features to choose accurate terminology and examples.
+- If feature_focus is present, prioritize those features in corrections and practice,
+  but do not turn every turn into a grammar lecture.
+- If a feature is not listed for the current level, introduce it only when the learner
+  asks or when it is necessary to understand the conversation."""
 
 
 def _build_external_inputs_block(ctx: TutorContext, extra: dict[str, Any] | None) -> str:
     lines: list[str] = []
     lines.append(f"learner_profile: {ctx.learner_name}")
     lines.append(f"proficiency_level: {ctx.level}")
+    if ctx.proficiency_framework:
+        lines.append(f"proficiency_framework: {ctx.proficiency_framework}")
     lines.append(f"target_language: {ctx.language} ({ctx.language_code})")
     lines.append(f"native_language: {ctx.native_language}")
 
     if ctx.locale and ctx.locale != "neutral":
         lines.append(f"dialect_preferences: {ctx.locale}")
+
+    if ctx.script:
+        lines.append(f"language_script: {ctx.script} ({ctx.direction})")
+
+    if ctx.teaching_notes:
+        for note in ctx.teaching_notes[:5]:
+            lines.append(f"language_teaching_note: {note}")
+
+    if ctx.language_features:
+        for feature in ctx.language_features[:8]:
+            lines.append(
+                f"language_feature: {feature.get('name', feature.get('id'))} "
+                f"[{feature.get('category', 'general')}] — {feature.get('description', '')}"
+            )
+            for example in (feature.get("examples") or [])[:2]:
+                lines.append(f"language_feature_example: {example}")
+
+    if ctx.feature_focus:
+        names = {
+            feature.get("id"): feature.get("name", feature.get("id"))
+            for feature in (ctx.language_features or [])
+        }
+        focus = ", ".join(names.get(feature_id, feature_id) for feature_id in ctx.feature_focus)
+        lines.append(f"feature_focus: prioritize {focus} in this session")
 
     if extra:
         if "vocabulary_count" in extra:

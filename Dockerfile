@@ -20,6 +20,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY pyproject.toml uv.lock ./
 COPY apps apps
 COPY mcp mcp
+COPY curriculum curriculum
+COPY profiles profiles
+COPY models/tts/voices.yaml models/tts/voices.yaml
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev

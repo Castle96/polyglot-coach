@@ -1,0 +1,86 @@
+code: fr
+name: French
+native_name: Français
+level_framework: cefr
+levels:
+  - A1
+default_level: A1
+status: preview
+
+locales:
+  neutral:
+    name: Neutral French
+    stt_language: fr
+    tts_voice: fr
+  fr_FR:
+    name: France
+    stt_language: fr
+    tts_voice: fr
+  fr_CA:
+    name: Canada
+    stt_language: fr
+    tts_voice: fr
+
+capabilities:
+  - grammar
+  - vocabulary
+  - scenarios
+  - locale
+
+script: Latin
+direction: ltr
+
+teaching_notes:
+  - "French nouns have grammatical gender; articles and adjectives must agree."
+  - "Tu is informal and vous is formal or plural; choose according to context."
+  - "Elision and liaison change pronunciation at word boundaries (le + ami → l'ami)."
+  - "Accents change pronunciation and meaning; do not omit them."
+
+features:
+  - id: gender_agreement
+    name: Gender and agreement
+    category: grammar
+    levels: [A1]
+    description: Match articles, nouns, and adjectives in gender and number.
+    examples:
+      - "le livre intéressant / les livres intéressants"
+      - "la maison intéressante / les maisons intéressantes"
+
+  - id: formality
+    name: Tu vs. vous
+    category: pragmatics
+    levels: [A1]
+    description: Choose informal tu or formal/plural vous based on relationship and context.
+    examples:
+      - "Comment tu t'appelles ? (informal)"
+      - "Comment vous appelez-vous ? (formal)"
+
+  - id: liaison_elision
+    name: Elision and liaison
+    category: phonology
+    levels: [A1]
+    description: Drop final vowels before another vowel and link consonants across word boundaries.
+    examples:
+      - "le + ami → l'ami"
+      - "les amis — /le.z‿a.mi/"
+
+  - id: accents
+    name: Accents and spelling
+    category: orthography
+    levels: [A1]
+    description: Use é, è, ê, ç, and other marks correctly; they affect pronunciation and meaning.
+    examples:
+      - "é (closed) vs. è (open)"
+      - "ça va — cedilla keeps /s/"
+
+  - id: regional_variation
+    name: Regional variation
+    category: sociolinguistics
+    levels: [A1]
+    description: Recognize differences between metropolitan French and Quebec French.
+    examples:
+      - "France: voiture / Canada: char (informal)"
+      - "Quebec affrication in tu and di"
+
+notes: >-
+  A1 preview content. Locale overrides for fr_CA are not written yet.

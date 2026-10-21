@@ -1,0 +1,90 @@
+code: es
+name: Spanish
+native_name: Español
+level_framework: cefr
+levels:
+  - A1
+default_level: A1
+status: active
+
+locales:
+  neutral:
+    name: Neutral Spanish
+    stt_language: es
+    tts_voice: es
+  es_ES:
+    name: Spain
+    stt_language: es
+    tts_voice: es
+  es_MX:
+    name: Mexico
+    stt_language: es
+    tts_voice: es
+
+capabilities:
+  - grammar
+  - vocabulary
+  - scenarios
+  - locale
+
+script: Latin
+direction: ltr
+
+teaching_notes:
+  - "Ser describes identity, origin, and inherent characteristics; estar describes states, location, and conditions."
+  - "Nouns carry grammatical gender, and articles/adjectives must agree in gender and number."
+  - "Tú is informal, usted is formal singular, and vosotros is informal plural in Spain; Latin American varieties generally use ustedes."
+  - "Regional vocabulary differs (for example ordenador/computadora and coche/carro)."
+
+features:
+  - id: ser_estar
+    name: Ser vs. estar
+    category: grammar
+    levels: [A1]
+    description: Choose between the two Spanish copulas based on identity, origin, state, or location.
+    examples:
+      - "Soy estudiante. (identity)"
+      - "Estoy cansado. (temporary state)"
+      - "Es de México. (origin)"
+      - "Está en la cocina. (location)"
+
+  - id: gender_agreement
+    name: Gender and number agreement
+    category: grammar
+    levels: [A1]
+    description: Match articles, nouns, and adjectives in gender and number.
+    examples:
+      - "el libro nuevo / los libros nuevos"
+      - "la casa nueva / las casas nuevas"
+
+  - id: formality
+    name: Formal and informal address
+    category: pragmatics
+    levels: [A1]
+    description: Select tú, usted, or vosotros/ustedes according to social context and region.
+    examples:
+      - "¿Cómo estás? (tú)"
+      - "¿Cómo está usted? (usted)"
+      - "¿Cómo estáis? (vosotros, Spain)"
+
+  - id: regional_variation
+    name: Regional vocabulary and usage
+    category: sociolinguistics
+    levels: [A1]
+    description: Recognize differences between Castilian Spanish and Latin American varieties.
+    examples:
+      - "ordenador (Spain) / computadora (Mexico)"
+      - "vosotros (Spain) / ustedes (Latin America)"
+
+  - id: pronunciation
+    name: Pronunciation and rhythm
+    category: phonology
+    levels: [A1]
+    description: Practice distinction/seseo, the jota, and syllable-timed rhythm.
+    examples:
+      - "gracias — /ˈɡɾaθjas/ (Spain) or /ˈɡɾasjas/ (Latin America)"
+      - "trabajo — strong velar jota"
+
+notes: >-
+  A1 has complete vocabulary, grammar, and scenario content. A2 through C1
+  are planned and should not be advertised as available yet.

@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -8,7 +9,7 @@ from sqlalchemy import text as db_text
 from pathlib import Path
 
 from polyglot_coach_api.data.loader import CURRICULUM_ROOT, load_all_curriculum_data
-from polyglot_coach_api.routers import analytics, conversation, curriculum, dictionary, grammar, learner, locale, review, tutor
+from polyglot_coach_api.routers import analytics, conversation, curriculum, dictionary, grammar, learner, locale, meta, review, tutor
 from polyglot_coach_shared.database import get_session
 from polyglot_coach_api.services.llm import is_llm_available
 
@@ -25,15 +26,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("POLYGLOT_CORS_ORIGINS", "*").split(",")
+    if origin.strip()
+]
+_CORS_WILDCARD = _CORS_ORIGINS == ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_CORS_ORIGINS,
+    # Browsers reject credentialed requests when the origin is "*".
+    allow_credentials=not _CORS_WILDCARD,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(learner.router, prefix="/api/v1/learner", tags=["learner"])
+app.include_router(meta.router, prefix="/api/v1/meta", tags=["meta"])
 app.include_router(curriculum.router, prefix="/api/v1/curriculum", tags=["curriculum"])
 app.include_router(dictionary.router, prefix="/api/v1/dictionary", tags=["dictionary"])
 app.include_router(grammar.router, prefix="/api/v1/grammar", tags=["grammar"])
@@ -66,5 +76,5 @@ async def health():
         "status": "ok" if db_ok else "degraded",
         "db_connected": db_ok,
         "llm_available": llm_ok,
-        "curriculum_loaded": Path(CURRICULUM_ROOT).exists(),
+        "curriculum_loaded": (Path(CURRICULUM_ROOT) / "registry.yaml").exists(),
     }

@@ -1,0 +1,83 @@
+code: de
+name: German
+native_name: Deutsch
+level_framework: cefr
+levels:
+  - A1
+default_level: A1
+status: preview
+
+locales:
+  neutral:
+    name: Neutral German
+    stt_language: de
+    tts_voice: de
+  de_DE:
+    name: Germany
+    stt_language: de
+    tts_voice: de
+
+capabilities:
+  - grammar
+  - vocabulary
+  - scenarios
+  - locale
+
+script: Latin
+direction: ltr
+
+teaching_notes:
+  - "German nouns have three genders and are always capitalized."
+  - "The four cases are nominative, accusative, dative, and genitive; articles and pronouns change with case."
+  - "The finite verb occupies position two in main clauses, with participles and infinitives at the end."
+  - "Du is informal and Sie is formal; use Sie with strangers and in professional settings."
+  - "Separable prefixes move to the end of main clauses."
+
+features:
+  - id: grammatical_case
+    name: The four cases
+    category: grammar
+    levels: [A1]
+    description: Use nominative, accusative, dative, and genitive according to the noun's role.
+    examples:
+      - "Der Mann sieht den Hund. (nominative → accusative)"
+      - "Ich helfe dem Mann. (dative)"
+
+  - id: gender_articles
+    name: Gender and definite articles
+    category: grammar
+    levels: [A1]
+    description: Learn nouns with der, die, or das and inflect articles for case and number.
+    examples:
+      - "der Tisch / die Lampe / das Fenster"
+      - "den Tisch (accusative) / dem Tisch (dative)"
+
+  - id: word_order
+    name: Verb-second word order
+    category: syntax
+    levels: [A1]
+    description: Keep the finite verb in second position in main clauses, even when an element moves to the front.
+    examples:
+      - "Ich trinke heute Kaffee."
+      - "Heute trinke ich Kaffee."
+
+  - id: separable_verbs
+    name: Separable verbs
+    category: syntax
+    levels: [A1]
+    description: Move separable prefixes to the end of main clauses.
+    examples:
+      - "Ich stehe um sieben Uhr auf."
+      - "Wann fängt der Film an?"
+
+  - id: formality
+    name: Du vs. Sie
+    category: pragmatics
+    levels: [A1]
+    description: Choose informal du or formal Sie according to relationship and setting.
+    examples:
+      - "Wie heißt du? (informal)"
+      - "Wie heißen Sie? (formal)"
+
+notes: >-
+  A1 preview content. Austrian and Swiss variants are not defined yet.

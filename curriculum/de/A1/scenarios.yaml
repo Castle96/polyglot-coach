@@ -1,7 +1,21 @@
 scenarios:
-  - title: "German A1: Example scenario"
-    context: "Describe the scenario here. What is happening? Where are they?"
+  - title: "Im Café: Ein Getränk bestellen"
+    context: "You are at a café in Berlin. Greet the server, order a drink, ask for the bill, and thank them."
     level: A1
-    roles: "Role1, Role2"
-    vocabulary_hints: "word1, word2, phrase1"
-    grammar_focus: "grammar-rule-id-1, grammar-rule-id-2"
+    roles: "Gast, Bedienung"
+    vocabulary_hints: "hallo, einen Kaffee, einen Tee, bitte, danke, die Rechnung"
+    grammar_focus: "de_A1_greetings, definite articles, polite requests"
+
+  - title: "Sich vorstellen: Jemanden kennenlernen"
+    context: "You meet a new classmate. Introduce yourself, ask their name, where they are from, and how they are."
+    level: A1
+    roles: "Student, Neue Studentin"
+    vocabulary_hints: "ich heiße, wie heißt du, ich bin, woher kommst du, wie geht's"
+    grammar_focus: "de_A1_greetings, sein, heißen, subject pronouns"
+
+  - title: "Auf dem Markt: Obst kaufen"
+    context: "You are at a market. Ask for fruit, say how much you want, ask the price, and pay."
+    level: A1
+    roles: "Kunde, Verkäuferin"
+    vocabulary_hints: "ich möchte, Äpfel, ein Kilo, wie viel, kostet, danke"
+    grammar_focus: "de_A1_articles, accusative case, numbers"

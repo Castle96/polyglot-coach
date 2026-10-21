@@ -1,13 +1,15 @@
 from fastapi import APIRouter
 
 from conversation import evaluate_response, generate_scenario, suggest_followup
+from polyglot_coach_api.validation import resolve_language_request
 
 router = APIRouter()
 
 
 @router.get("/scenarios")
-def api_generate_scenario(language: str, level: str, topic: str | None = None):
-    return generate_scenario(language=language, level=level, topic=topic)
+def api_generate_scenario(language: str, level: str | None = None, topic: str | None = None):
+    _, resolved_level, _ = resolve_language_request(language, level=level)
+    return generate_scenario(language=language, level=resolved_level, topic=topic)
 
 
 @router.post("/evaluate")

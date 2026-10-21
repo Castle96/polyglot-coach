@@ -26,7 +26,7 @@ fi
 # ------------------------------------------------------------------
 # STT  (faster-whisper auto-downloads to this dir on first use)
 # ------------------------------------------------------------------
-export POLYGLOT_STT_MODEL="${POLYGLOT_STT_MODEL:-large-v3}"
+export POLYGLOT_STT_MODEL="${POLYGLOT_STT_MODEL:-medium}"
 export POLYGLOT_STT_MODEL_DIR="${POLYGLOT_STT_MODEL_DIR:-$MODEL_DIR/stt}"
 mkdir -p "$POLYGLOT_STT_MODEL_DIR"
 
@@ -63,25 +63,10 @@ if [ "${1:-}" = "--download-models" ]; then
     echo "    Target: $POLYGLOT_STT_MODEL_DIR"
     echo ""
 
-    # 3. TTS — Piper voices
+    # 3. TTS — Piper voices (manifest: models/tts/voices.yaml)
     echo ">>> Downloading Piper TTS voices ..."
     mkdir -p "$POLYGLOT_TTS_VOICE_DIR"
-    download_voice() {
-        local locale="$1" url="$2"
-        local out="$POLYGLOT_TTS_VOICE_DIR/${locale}.onnx"
-        local json_out="$POLYGLOT_TTS_VOICE_DIR/${locale}.onnx.json"
-        if [ ! -f "$out" ]; then
-            echo "    Downloading $locale voice ..."
-            wget -q --show-progress -O "$out" "$url"
-            wget -q --show-progress -O "$json_out" "${url}.json"
-        else
-            echo "    $locale voice: already downloaded"
-        fi
-    }
-
-    download_voice "es" "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/carlfm/medium/es_ES-carlfm-medium.onnx"
-    download_voice "fr" "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx"
-    download_voice "de" "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx"
+    uv run python tools/download_voices.py --voice-dir "$POLYGLOT_TTS_VOICE_DIR"
 
     echo ""
     echo "============================================"

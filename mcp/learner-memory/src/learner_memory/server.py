@@ -36,7 +36,7 @@ async def handle_list_tools() -> list[Tool]:
                     "native_language": {"type": "string", "description": "Native language code (e.g. 'en')"},
                     "target_language": {"type": "string", "description": "Target language code (e.g. 'es')"},
                     "locale": {"type": "string", "description": "Locale code (e.g. 'es_MX')"},
-                    "proficiency_level": {"type": "string", "description": "CEFR level (A1-C1)"},
+                    "proficiency_level": {"type": "string", "description": "Level within the language's framework (e.g. CEFR A1-C2, JLPT N5-N1)"},
                 },
                 "required": ["profile_id"],
             },

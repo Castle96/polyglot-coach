@@ -15,10 +15,10 @@ words:
     translation: please / you're welcome
     tags: polite
   - word: ja
-    translation: yes
+    translation: "yes"
     tags: basic
   - word: nein
-    translation: no
+    translation: "no"
     tags: basic
   - word: eins
     translation: one

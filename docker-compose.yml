@@ -18,3 +18,5 @@ services:
     environment:
       TZ: America/Chicago
       OLLAMA_HOST: http://host.docker.internal:11434
+      POLYGLOT_CURRICULUM_PATH: /app/curriculum
+      POLYGLOT_DB_PATH: /app/storage/polyglot.db

@@ -15,10 +15,10 @@ words:
     translation: please (formal)
     tags: polite
   - word: oui
-    translation: yes
+    translation: "yes"
     tags: basic
   - word: non
-    translation: no
+    translation: "no"
     tags: basic
   - word: un
     translation: one / a (masc)

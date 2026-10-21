@@ -1,0 +1,33 @@
+version: 1
+
+# The language used when a request does not specify one.
+default_language: es
+
+# Interface language for the bundled web app (not the language being learned).
+default_ui_language: en
+
+# Proficiency frameworks. Languages declare which framework they use in
+# their own language.yaml. Levels are ordered from beginner to advanced.
+level_frameworks:
+  cefr:
+    name: CEFR
+    levels: [A1, A2, B1, B2, C1, C2]
+  jlpt:
+    name: JLPT
+    levels: [N5, N4, N3, N2, N1]
+
+# Active language packs. Each code must match a directory of the same name
+# containing a language.yaml.
+languages:
+  - es
+  - fr
+  - de
+
+# Documented but not yet shipped. These must not have a language.yaml until
+# they are ready to be enabled.
+planned_languages:
+  - code: ja
+    name: Japanese
+    native_name: 日本語
+    level_framework: jlpt
+    levels: [N5]

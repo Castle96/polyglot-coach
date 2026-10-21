@@ -30,15 +30,33 @@ def _piper_binary_exists() -> bool:
         return False
 
 
-def _voice_model_path(locale: str) -> Path | None:
-    model = Path(VOICE_DIR) / f"{locale}.onnx"
-    if model.exists():
-        return model
+def _voice_model_path(locale: str, language: str | None = None) -> Path | None:
+    """Resolve a voice file, falling back from a locale to its base language.
+
+    Voices are stored as ``<tts_voice>.onnx``. Language packs set
+    ``tts_voice`` to values such as ``es`` or ``fr``, so ``es_MX`` should fall
+    back to ``es`` when no region-specific voice is installed.
+    """
+    candidates: list[str] = []
+    for candidate in (locale, language):
+        if candidate and candidate not in candidates:
+            candidates.append(candidate)
+    if locale and "_" in locale:
+        base = locale.split("_", 1)[0]
+        if base not in candidates:
+            candidates.append(base)
+
+    for candidate in candidates:
+        if candidate == "neutral":
+            continue
+        model = Path(VOICE_DIR) / f"{candidate}.onnx"
+        if model.exists():
+            return model
     return None
 
 
-def synthesize(text: str, locale: str = "en_US") -> bytes | None:
-    voice = _voice_model_path(locale)
+def synthesize(text: str, locale: str = "en_US", language: str | None = None) -> bytes | None:
+    voice = _voice_model_path(locale, language)
     if not voice:
         return None
 

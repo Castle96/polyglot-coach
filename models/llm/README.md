@@ -1,6 +1,7 @@
 # Local LLM Models
 
-The primary local language model for Polyglot Coach is Qwen3 8B in GGUF format.
+The current default local language model for Polyglot Coach is Qwen2.5 7B.
+Both Ollama and GGUF (llama-cpp-python) backends are supported.
 
 ## Download
 
@@ -9,5 +10,6 @@ Large model files such as `.gguf` assets are ignored by git.
 
 ## Future Models
 
+- Qwen3 8B
 - Qwen3 14B
 - Gemma 3 12B

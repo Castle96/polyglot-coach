@@ -32,6 +32,10 @@ spec:
               value: http://ollama-svc.esp32-dev.svc:11434
             - name: PYTHONPATH
               value: /app
+            - name: POLYGLOT_CURRICULUM_PATH
+              value: /app/curriculum
+            - name: POLYGLOT_DB_PATH
+              value: /app/storage/polyglot.db
           volumeMounts:
             - name: storage
               mountPath: /app/storage

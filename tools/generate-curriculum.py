@@ -15,8 +15,12 @@ Usage:
     # Import from LibreLingo course directory
     python tools/generate-curriculum.py import-librelingo ./librelingo-course fr
 
-    # Generate all CEFR levels at once
+    # Generate all levels at once
     python tools/generate-curriculum.py scaffold fr A1 French --levels A1,A2,B1
+
+The command writes a ``language.yaml`` pack and level YAML files. Adding the
+code to ``curriculum/registry.yaml`` is a deliberate manual step so unfinished
+packs are not loaded by the API.
 """
 
 import argparse
@@ -30,12 +34,49 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CURRICULUM_DIR = PROJECT_ROOT / "curriculum"
 
 # --- scaffold templates ---
-def _manifest_content(lang_code: str, lang_name: str, levels_str: str) -> str:
+def _language_content(
+    lang_code: str,
+    lang_name: str,
+    levels_str: str,
+    native_name: str | None = None,
+    framework: str = "cefr",
+) -> str:
     levels = [lev.strip() for lev in levels_str.split(",") if lev.strip()]
-    lines = [f"language: {lang_code}", f"name: {lang_name}", "levels:"]
+    native_name = native_name or lang_name
+    lines = [
+        f"code: {lang_code}",
+        f"name: {lang_name}",
+        f"native_name: {native_name}",
+        f"level_framework: {framework}",
+        "levels:",
+    ]
     lines.extend(f"  - {lev}" for lev in levels)
-    lines.extend(["locales:", "  - neutral", ""])
+    lines.extend(
+        [
+            f"default_level: {levels[0] if levels else 'A1'}",
+            "status: draft",
+            "locales:",
+            "  neutral:",
+            "    name: Neutral",
+            f"    stt_language: {lang_code}",
+            f"    tts_voice: {lang_code}",
+            "capabilities:",
+            "  - grammar",
+            "  - vocabulary",
+            "  - scenarios",
+            "  - locale",
+            "notes: Generated scaffold. Replace template content and validate.",
+            "",
+        ]
+    )
     return "\n".join(lines)
+
+
+def _register_language_hint(lang_code: str) -> None:
+    print(
+        f"  Remember to add '{lang_code}' to curriculum/registry.yaml "
+        "(and remove it from planned_languages)."
+    )
 
 GRAMMAR_TEMPLATE = """\
 rules:
@@ -134,7 +175,7 @@ def _llm_prompt(prompt: str, temperature: float = 0.3) -> str:
 
 
 def _generate_grammar(lang_code: str, lang_name: str, level: str) -> str:
-    prompt = f"""Generate exactly 15 grammar rules for {lang_name} ({lang_code}) at CEFR level {level}.
+    prompt = f"""Generate exactly 15 grammar rules for {lang_name} ({lang_code}) at proficiency level {level}.
 Return ONLY valid YAML (no markdown, no backticks) using this structure:
 
 rules:
@@ -153,7 +194,7 @@ Cover the most important grammar points for this level."""
 
 
 def _generate_vocabulary(lang_code: str, lang_name: str, level: str) -> str:
-    prompt = f"""Generate exactly 80 vocabulary words for {lang_name} ({lang_code}) at CEFR level {level}.
+    prompt = f"""Generate exactly 80 vocabulary words for {lang_name} ({lang_code}) at proficiency level {level}.
 Return ONLY valid YAML (no markdown, no backticks) using this structure:
 
 words:
@@ -168,7 +209,7 @@ Cover the most essential vocabulary for this level."""
 
 
 def _generate_scenarios(lang_code: str, lang_name: str, level: str) -> str:
-    prompt = f"""Generate exactly 8 conversation scenarios for {lang_name} ({lang_code}) at CEFR level {level}.
+    prompt = f"""Generate exactly 8 conversation scenarios for {lang_name} ({lang_code}) at proficiency level {level}.
 Return ONLY valid YAML (no markdown, no backticks) using this structure:
 
 scenarios:
@@ -199,12 +240,21 @@ def cmd_scaffold(args):
 
     level_dir.mkdir(parents=True, exist_ok=True)
 
-    # manifest
-    manifest_path = lang_dir / "manifest.yaml"
-    if not manifest_path.exists() or args.force:
+    # language pack metadata
+    pack_path = lang_dir / "language.yaml"
+    if not pack_path.exists() or args.force:
         levels_str = args.levels if args.levels else args.level
-        manifest_path.write_text(_manifest_content(args.lang_code, args.lang_name, levels_str))
-        print(f"  Created: {manifest_path}")
+        pack_path.write_text(
+            _language_content(
+                args.lang_code,
+                args.lang_name,
+                levels_str,
+                native_name=args.native_name,
+                framework=args.framework,
+            )
+        )
+        print(f"  Created: {pack_path}")
+        _register_language_hint(args.lang_code)
 
     # level files
     for filename, template in [
@@ -228,12 +278,21 @@ def cmd_generate(args):
     level_dir = lang_dir / args.level
     level_dir.mkdir(parents=True, exist_ok=True)
 
-    # manifest
-    manifest_path = lang_dir / "manifest.yaml"
-    if not manifest_path.exists() or args.force:
+    # language pack metadata
+    pack_path = lang_dir / "language.yaml"
+    if not pack_path.exists() or args.force:
         levels_str = args.levels if args.levels else args.level
-        manifest_path.write_text(_manifest_content(args.lang_code, args.lang_name, levels_str))
-        print(f"  Created: {manifest_path}")
+        pack_path.write_text(
+            _language_content(
+                args.lang_code,
+                args.lang_name,
+                levels_str,
+                native_name=args.native_name,
+                framework=args.framework,
+            )
+        )
+        print(f"  Created: {pack_path}")
+        _register_language_hint(args.lang_code)
 
     # grammar
     grammar = _generate_grammar(args.lang_code, args.lang_name, args.level)
@@ -299,11 +358,12 @@ def cmd_import_librelingo(args):
     else:
         lang_name = lang_code
 
-    # manifest
-    manifest_path = lang_dir / "manifest.yaml"
-    if not manifest_path.exists():
-        manifest_path.write_text(_manifest_content(lang_code, lang_name, "A1"))
-        print(f"  Created: {manifest_path}")
+    # language pack metadata
+    pack_path = lang_dir / "language.yaml"
+    if not pack_path.exists():
+        pack_path.write_text(_language_content(lang_code, lang_name, "A1"))
+        print(f"  Created: {pack_path}")
+        _register_language_hint(lang_code)
 
     # Walk modules/skills
     modules_dir = course_dir / "modules"
@@ -424,18 +484,22 @@ def main():
     # scaffold
     p = sub.add_parser("scaffold", help="Create empty YAML structure for manual editing")
     p.add_argument("lang_code", help="Language code (es, fr, de, ja)")
-    p.add_argument("level", help="CEFR level (A1, A2, B1)")
+    p.add_argument("level", help="Proficiency level (A1, A2, N5, …)")
     p.add_argument("lang_name", help="Language name (Spanish, French, German)")
+    p.add_argument("--native-name", help="Native language name (e.g. Français)")
+    p.add_argument("--framework", default="cefr", help="Proficiency framework (cefr, jlpt)")
     p.add_argument("--force", "-f", action="store_true", help="Overwrite existing files")
-    p.add_argument("--levels", help="Comma-separated levels for manifest (default: same as level)")
+    p.add_argument("--levels", help="Comma-separated levels for language.yaml (default: same as level)")
 
     # generate
     p = sub.add_parser("generate", help="Generate curriculum content using LLM")
     p.add_argument("lang_code", help="Language code")
-    p.add_argument("level", help="CEFR level")
+    p.add_argument("level", help="Proficiency level")
     p.add_argument("lang_name", help="Language name")
+    p.add_argument("--native-name", help="Native language name")
+    p.add_argument("--framework", default="cefr", help="Proficiency framework (cefr, jlpt)")
     p.add_argument("--force", "-f", action="store_true", help="Regenerate existing files")
-    p.add_argument("--levels", help="Comma-separated levels for manifest")
+    p.add_argument("--levels", help="Comma-separated levels for language.yaml")
     p.add_argument("--model", help="Override POLYGLOT_LLM_MODEL_PATH")
 
     # import-librelingo

@@ -1,0 +1,15 @@
+# Offline TTS voices, keyed by the `tts_voice` value in each language pack's
+# locale entries. Files are saved as <key>.onnx and <key>.onnx.json.
+#
+# These are Piper voices from the rhasspy/piper-voices collection. Japanese is
+# intentionally absent: no supported ja_JP voice has been selected yet.
+voices:
+  es:
+    name: Spanish (Spain)
+    url: https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/carlfm/medium/es_ES-carlfm-medium.onnx
+  fr:
+    name: French (France)
+    url: https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx
+  de:
+    name: German (Germany)
+    url: https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx

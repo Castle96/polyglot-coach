@@ -22,10 +22,10 @@ words:
     translation: please
     tags: courtesy, basic
   - word: sí
-    translation: yes
+    translation: "yes"
     tags: basic
-  - word: no
-    translation: no
+  - word: "no"
+    translation: "no"
     tags: basic
 
   # Pronouns

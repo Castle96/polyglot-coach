@@ -28,7 +28,7 @@ The Tutor Layer constructs prompts, evaluates context, and generates learning-fo
 
 Components:
 
-- Qwen3
+- Qwen2.5 7B
 - Curriculum Engine
 - Learner Memory Engine
 
@@ -55,8 +55,11 @@ The final structured tutor response is returned to the Voice Layer for synthesis
 
 ## Model Recommendations
 
-| Capability | Primary Model | Future Model |
+| Capability | Current Default | Future Model |
 | --- | --- | --- |
-| LLM | Qwen3 8B | Qwen3 14B, Gemma 3 12B |
+| LLM | Qwen2.5 7B | Qwen3 8B, Qwen3 14B, Gemma 3 12B |
 | STT | Faster Whisper Medium | Faster Whisper Large V3 |
 | TTS | Piper TTS | Additional higher-quality locale voice packs |
+
+The voice layer is not wired into the API yet; see the project README for
+current implementation status.

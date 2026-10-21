@@ -208,7 +208,7 @@
 
   /* Settings sidebar */
   .sidebar {
-    width: 260px;
+    width: 300px;
     background: var(--mantle);
     border-left: 1px solid var(--surface1);
     padding: 16px;
@@ -241,6 +241,46 @@
   }
   .field select:focus, .field input:focus { border-color: var(--mauve); }
   .field select option { background: var(--surface0); color: var(--text); }
+  .language-meta {
+    font-size: 11px;
+    color: var(--overlay0);
+    min-height: 16px;
+    margin-top: 2px;
+  }
+  .feature-list { display: flex; flex-direction: column; gap: 6px; }
+  .feature-item {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--surface1);
+    border-radius: 8px;
+    background: var(--surface0);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .feature-item:hover { border-color: var(--mauve); }
+  .feature-item input {
+    accent-color: var(--mauve);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .feature-item .fname { display: block; font-size: 13px; font-weight: 500; }
+  .feature-item .fcat {
+    display: inline-block;
+    margin-top: 1px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--mauve);
+  }
+  .feature-item .fdesc {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--overlay1);
+  }
+  .feature-hint { font-size: 11px; color: var(--overlay0); line-height: 1.4; }
   .btn-secondary {
     padding: 8px 14px;
     border: 1px solid var(--surface1);
@@ -311,7 +351,7 @@
       <h2>Profile</h2>
       <div class="field profile-row">
         <input type="text" id="profileInput" placeholder="Your name" value="Learner">
-        <button class="btn-secondary" id="profileBtn">Load</button>
+        <button class="btn-secondary" id="profileBtn" disabled>Load</button>
       </div>
       <div style="font-size:11px;color:var(--overlay0);margin-top:4px" id="profileId"></div>
     </div>
@@ -320,21 +360,15 @@
       <h2>Session</h2>
       <div class="field">
         <label for="langSelect">Language</label>
-        <select id="langSelect">
-          <option value="es">Spanish</option>
-          <option value="fr">French</option>
-          <option value="de">German</option>
-          <option value="ja">Japanese</option>
+        <select id="langSelect" disabled>
+          <option value="">Loading languages…</option>
         </select>
+        <div class="language-meta" id="languageMeta"></div>
       </div>
       <div class="field">
         <label for="levelSelect">Level</label>
-        <select id="levelSelect">
-          <option value="A1">A1 — Beginner</option>
-          <option value="A2">A2 — Elementary</option>
-          <option value="B1">B1 — Intermediate</option>
-          <option value="B2">B2 — Upper Intermediate</option>
-          <option value="C1">C1 — Advanced</option>
+        <select id="levelSelect" disabled>
+          <option value="">—</option>
         </select>
       </div>
       <div class="field">
@@ -351,21 +385,23 @@
       </div>
       <div class="field">
         <label for="localeSelect">Locale</label>
-        <select id="localeSelect">
-          <option value="neutral">Neutral</option>
-          <option value="es_ES">Spain (es_ES)</option>
-          <option value="es_MX">Mexico (es_MX)</option>
-          <option value="fr_FR">France (fr_FR)</option>
-          <option value="fr_CA">Canada (fr_CA)</option>
-          <option value="de_DE">Germany (de_DE)</option>
-          <option value="ja_JP">Japan (ja_JP)</option>
+        <select id="localeSelect" disabled>
+          <option value="">—</option>
         </select>
       </div>
     </div>
 
     <div>
+      <h2>Advanced Focus</h2>
+      <div class="feature-hint" style="margin-bottom:6px">Pick language-specific features to prioritize in this session.</div>
+      <div class="feature-list" id="featureList">
+        <div class="feature-hint">Loading features…</div>
+      </div>
+    </div>
+
+    <div>
       <h2>Quick Start</h2>
-      <button class="btn-secondary" id="scenarioBtn" style="width:100%">Load Scenario</button>
+      <button class="btn-secondary" id="scenarioBtn" style="width:100%" disabled>Load Scenario</button>
     </div>
 
     <div class="sidebar-status" id="sidebarStatus"></div>
@@ -381,15 +417,131 @@ const API = window.location.origin;
 let profileId = parseInt(localStorage.getItem('pc_profile_id')) || null;
 let profileName = localStorage.getItem('pc_profile_name') || 'Learner';
 let conversationHistory = [];
+let languageMap = new Map();
 const msgContainer = document.getElementById('messages');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 const statusDot = document.getElementById('statusDot');
 const statusLabel = document.getElementById('statusLabel');
+const langSelect = document.getElementById('langSelect');
+const levelSelect = document.getElementById('levelSelect');
+const localeSelect = document.getElementById('localeSelect');
+const featureList = document.getElementById('featureList');
+const languageMeta = document.getElementById('languageMeta');
+
+const FALLBACK_LANGUAGES = [
+  { code: 'es', name: 'Spanish', native_name: 'Español', status: 'active', script: 'Latin', levels: ['A1'], default_level: 'A1', locales: [{ code: 'neutral', name: 'Neutral' }], features: [] },
+  { code: 'fr', name: 'French', native_name: 'Français', status: 'preview', script: 'Latin', levels: ['A1'], default_level: 'A1', locales: [{ code: 'neutral', name: 'Neutral' }], features: [] },
+  { code: 'de', name: 'German', native_name: 'Deutsch', status: 'preview', script: 'Latin', levels: ['A1'], default_level: 'A1', locales: [{ code: 'neutral', name: 'Neutral' }], features: [] },
+];
 
 // Init
 document.getElementById('profileInput').value = profileName;
 if (profileId) document.getElementById('profileId').textContent = `ID: ${profileId}`;
+
+// Escape a value for use inside an HTML attribute.
+function escapeAttr(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[char]));
+}
+
+function localeLabel(locale) {
+  const code = locale.code || 'neutral';
+  const name = locale.name || code;
+  return code === 'neutral' ? name : `${name} (${code})`;
+}
+
+async function loadLanguages() {
+  let languages = [];
+  try {
+    const res = await fetch(`${API}/api/v1/meta/languages`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    languages = data.languages || [];
+  } catch {
+    showToast('Language metadata unavailable — using offline defaults.');
+  }
+  if (!languages.length) languages = FALLBACK_LANGUAGES;
+
+  languageMap = new Map(languages.map(language => [language.code, language]));
+  langSelect.innerHTML = languages
+    .map(language => `<option value="${escapeAttr(language.code)}">${escapeHtml(language.name)} — ${escapeHtml(language.native_name || language.name)}</option>`)
+    .join('');
+  langSelect.disabled = false;
+  levelSelect.disabled = false;
+  localeSelect.disabled = false;
+  document.getElementById('profileBtn').disabled = false;
+  document.getElementById('scenarioBtn').disabled = false;
+
+  const saved = localStorage.getItem('pc_language');
+  langSelect.value = languageMap.has(saved) ? saved : languages[0].code;
+  applyLanguageSelection();
+}
+
+function applyLanguageSelection(preferredLevel, preferredLocale) {
+  const language = languageMap.get(langSelect.value);
+  if (!language) return;
+
+  const levels = language.levels && language.levels.length ? language.levels : ['A1'];
+  levelSelect.innerHTML = levels
+    .map(level => `<option value="${escapeAttr(level)}">${escapeHtml(level)}</option>`)
+    .join('');
+  const level = levels.includes(preferredLevel)
+    ? preferredLevel
+    : (levels.includes(language.default_level) ? language.default_level : levels[0]);
+  levelSelect.value = level;
+
+  const locales = language.locales && language.locales.length
+    ? language.locales
+    : [{ code: 'neutral', name: 'Neutral' }];
+  localeSelect.innerHTML = locales
+    .map(locale => `<option value="${escapeAttr(locale.code)}">${escapeHtml(localeLabel(locale))}</option>`)
+    .join('');
+  const localeCodes = locales.map(locale => locale.code);
+  localeSelect.value = localeCodes.includes(preferredLocale)
+    ? preferredLocale
+    : (localeCodes.includes('neutral') ? 'neutral' : localeCodes[0]);
+
+  const framework = language.level_framework_name || language.level_framework;
+  languageMeta.textContent = [
+    language.native_name && language.native_name !== language.name ? language.native_name : null,
+    framework,
+    language.script,
+    language.status,
+  ].filter(Boolean).join(' · ');
+
+  renderFeatures(language, levelSelect.value);
+  localStorage.setItem('pc_language', language.code);
+}
+
+function renderFeatures(language, level) {
+  const features = (language.features || []).filter(feature =>
+    !feature.levels || feature.levels.length === 0 || feature.levels.includes(level)
+  );
+  if (!features.length) {
+    featureList.innerHTML = '<div class="feature-hint">No advanced features are declared for this level yet.</div>';
+    return;
+  }
+  featureList.innerHTML = features.map(feature => `
+    <label class="feature-item">
+      <input type="checkbox" value="${escapeAttr(feature.id)}">
+      <span>
+        <span class="fname">${escapeHtml(feature.name || feature.id)}</span>
+        <span class="fcat">${escapeHtml(feature.category || 'feature')}</span>
+        <span class="fdesc">${escapeHtml(feature.description || '')}</span>
+      </span>
+    </label>`).join('');
+}
+
+langSelect.addEventListener('change', () => {
+  conversationHistory = [];
+  applyLanguageSelection();
+});
+levelSelect.addEventListener('change', () => {
+  const language = languageMap.get(langSelect.value);
+  if (language) renderFeatures(language, levelSelect.value);
+});
 
 // Load scenario
 document.getElementById('scenarioBtn').addEventListener('click', async () => {
@@ -415,12 +567,17 @@ async function loadProfile() {
   try {
     let res = await fetch(`${API}/api/v1/learner/profiles/${encodeURIComponent(name)}`);
     if (res.status === 404) {
-      const lang = document.getElementById('langSelect').value;
-      const level = document.getElementById('levelSelect').value;
+      const settings = getSettings();
       res = await fetch(`${API}/api/v1/learner/profiles`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ name, native_language: 'en', target_language: lang, locale: 'neutral', proficiency_level: level }),
+        body: JSON.stringify({
+          name,
+          native_language: 'en',
+          target_language: settings.lang,
+          locale: settings.locale,
+          proficiency_level: settings.level,
+        }),
       });
       if (!res.ok) { showToast('Failed to create profile.'); return; }
     } else if (!res.ok) { showToast('Failed to load profile.'); return; }
@@ -430,9 +587,10 @@ async function loadProfile() {
     localStorage.setItem('pc_profile_id', profileId);
     localStorage.setItem('pc_profile_name', profileName);
     document.getElementById('profileId').textContent = `ID: ${profileId}`;
-    document.getElementById('langSelect').value = profile.target_language || 'es';
-    document.getElementById('levelSelect').value = profile.proficiency_level || 'A1';
-    document.getElementById('localeSelect').value = profile.locale || 'neutral';
+    if (languageMap.has(profile.target_language)) {
+      langSelect.value = profile.target_language;
+    }
+    applyLanguageSelection(profile.proficiency_level, profile.locale);
     showToast(`Profile "${profileName}" loaded.`);
   } catch { showToast('Could not connect to server.'); }
 }
@@ -463,6 +621,7 @@ async function sendMessage() {
         level: settings.level,
         mode: settings.mode,
         locale: settings.locale,
+        features: settings.features,
         conversation_history: conversationHistory,
       }),
     });
@@ -470,7 +629,12 @@ async function sendMessage() {
     removeLoading(loadingId);
 
     if (!res.ok) {
-      addMessage(`Error: ${res.status} — ${res.statusText}`, 'tutor');
+      let detail = res.statusText;
+      try {
+        const error = await res.json();
+        if (typeof error.detail === 'string') detail = error.detail;
+      } catch { /* keep status text */ }
+      addMessage(`Error: ${detail}`, 'tutor');
       return;
     }
 
@@ -528,10 +692,11 @@ function removeLoading(id) {
 
 function getSettings() {
   return {
-    lang: document.getElementById('langSelect').value,
-    level: document.getElementById('levelSelect').value,
+    lang: langSelect.value,
+    level: levelSelect.value,
     mode: document.getElementById('modeSelect').value,
-    locale: document.getElementById('localeSelect').value,
+    locale: localeSelect.value,
+    features: Array.from(featureList.querySelectorAll('input:checked')).map(input => input.value),
   };
 }
 
@@ -570,23 +735,28 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
-// Auto-load profile on startup if stored
-if (profileId) {
-  // Re-fetch to get latest settings
-  fetch(`${API}/api/v1/learner/profiles/${encodeURIComponent(profileName)}`)
-    .then(r => r.ok ? r.json() : null)
-    .then(p => {
-      if (p) {
-        document.getElementById('langSelect').value = p.target_language || 'es';
-        document.getElementById('levelSelect').value = p.proficiency_level || 'A1';
-        document.getElementById('localeSelect').value = p.locale || 'neutral';
-      }
-    })
-    .catch(() => {});
+// Auto-load stored profile after language metadata is available.
+async function restoreProfile() {
+  if (!profileId) return;
+  try {
+    const res = await fetch(`${API}/api/v1/learner/profiles/${encodeURIComponent(profileName)}`);
+    if (!res.ok) return;
+    const profile = await res.json();
+    if (languageMap.has(profile.target_language)) {
+      langSelect.value = profile.target_language;
+    }
+    applyLanguageSelection(profile.proficiency_level, profile.locale);
+  } catch { /* keep saved/local defaults */ }
 }
 
-checkHealth();
-setInterval(checkHealth, 15000);
+async function init() {
+  await loadLanguages();
+  await restoreProfile();
+  checkHealth();
+  setInterval(checkHealth, 15000);
+}
+
+init();
 </script>
 </body>
 </html>

@@ -20,24 +20,12 @@ from typing import Any
 
 from polyglot_coach_api.services.prompts import _MODE_ALIAS, TutorContext, build_tutor_prompt
 from polyglot_coach_shared.database import get_session
+from polyglot_coach_shared.languages import features_for, get_language, language_name, level_framework
 from polyglot_coach_shared.models import GrammarRule, LearnerProfile, MistakeRecord, ProgressRecord, VocabularyEntry
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
 GGUF_PATH = os.environ.get("POLYGLOT_LLM_MODEL_PATH", "")
-
-_LANGUAGE_MAP = {
-    "es": "Spanish",
-    "fr": "French",
-    "de": "German",
-    "ja": "Japanese",
-    "en": "English",
-    "pt": "Portuguese",
-    "it": "Italian",
-    "zh": "Chinese",
-    "ko": "Korean",
-    "ru": "Russian",
-}
 
 _HAS_LLAMA_CPP = False
 try:
@@ -105,8 +93,8 @@ def _enrich_from_profile(profile_id: int | None, ctx: TutorContext) -> dict[str,
 
         ctx.learner_name = profile.name
         ctx.native_language = profile.native_language
-        ctx.locale = profile.locale or "neutral"
-        ctx.level = profile.proficiency_level or ctx.level
+        # Level and locale come from the validated session request. The profile
+        # supplies defaults to the UI, but must not silently override selectors.
 
         vocab_count = session.query(VocabularyEntry).filter(
             VocabularyEntry.profile_id == profile_id,
@@ -334,7 +322,12 @@ def load_model():
 
 
 def _resolve_language_name(code: str) -> str:
-    return _LANGUAGE_MAP.get(code, code)
+    """Resolve a target-language code from the curriculum registry.
+
+    Unknown codes intentionally fall back to the code itself rather than a
+    hardcoded list, so adding a language does not require editing this module.
+    """
+    return language_name(code)
 
 
 def _make_context(
@@ -348,6 +341,7 @@ def _make_context(
     grammar_focus: list[str] | None = None,
     scenario_context: str | None = None,
     vocabulary_hints: list[str] | None = None,
+    feature_focus: list[str] | None = None,
 ) -> tuple[TutorContext, dict[str, Any]]:
     lang_name = _resolve_language_name(language)
     mode_normalized = _normalize_mode(mode)
@@ -363,10 +357,25 @@ def _make_context(
         grammar_focus=grammar_focus,
         scenario_context=scenario_context,
         vocabulary_hints=vocabulary_hints,
+        feature_focus=feature_focus,
     )
     extra = _enrich_from_profile(profile_id, ctx)
+
+    pack = get_language(language) or {}
+    available_features = features_for(language, ctx.level)
+    available_ids = {feature.get("id") for feature in available_features}
+    ctx.language_features = available_features
+    ctx.teaching_notes = list(pack.get("teaching_notes", []))
+    ctx.script = pack.get("script")
+    ctx.direction = pack.get("direction", "ltr")
+    framework = level_framework(language) or {}
+    ctx.proficiency_framework = framework.get("name")
+    ctx.feature_focus = [
+        feature for feature in (feature_focus or []) if feature in available_ids
+    ] or None
+
     _enrich_due_words(profile_id, language, extra)
-    _enrich_curriculum(language, level, extra)
+    _enrich_curriculum(language, ctx.level, extra)
     return ctx, extra
 
 
@@ -442,6 +451,7 @@ def generate_tutor_response(
     grammar_focus: list[str] | None = None,
     scenario_context: str | None = None,
     vocabulary_hints: list[str] | None = None,
+    feature_focus: list[str] | None = None,
 ) -> TutorResult:
     ctx, extra = _make_context(
         language=language,
@@ -454,6 +464,7 @@ def generate_tutor_response(
         grammar_focus=grammar_focus,
         scenario_context=scenario_context,
         vocabulary_hints=vocabulary_hints,
+        feature_focus=feature_focus,
     )
 
     backend = _detect_backend()
@@ -473,7 +484,7 @@ def generate_tutor_response(
     _record_progress(
         profile_id,
         event_type="chat",
-        detail=f"{ctx.mode} — {language} {level}",
+        detail=f"{ctx.mode} — {language} {ctx.level}",
     )
 
     return TutorResult(reply=reply, corrections=corrections)
