@@ -35,12 +35,15 @@ def load_stt_model():
     return _whisper_model
 
 
-def transcribe(audio_bytes: bytes, language: str | None = None) -> dict:
+def transcribe(
+    audio_bytes: bytes, language: str | None = None, suffix: str = ".wav"
+) -> dict:
     model = load_stt_model()
     if model is None:
-        return {"text": "", "error": "faster-whisper not installed, run: uv pip install faster-whisper"}
+        return {"text": "", "error": "faster-whisper not installed, run: uv sync --extra speech"}
 
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+    safe_suffix = suffix if suffix.startswith(".") and len(suffix) <= 8 else ".wav"
+    with tempfile.NamedTemporaryFile(suffix=safe_suffix, delete=False) as f:
         f.write(audio_bytes)
         tmp_path = f.name
 

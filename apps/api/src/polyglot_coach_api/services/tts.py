@@ -4,13 +4,20 @@ Text-to-Speech integration for Polyglot Coach.
 Uses Piper TTS for offline voice synthesis.
 """
 
-import importlib
 import os
+import shutil
 import subprocess
 import tempfile
+import wave
+from functools import lru_cache
 from pathlib import Path
 
-_HAS_PIPER = importlib.util.find_spec("piper_tts") is not None  # type: ignore[attr-defined]
+try:
+    from piper.voice import PiperVoice
+
+    _HAS_PIPER = True
+except ImportError:
+    _HAS_PIPER = False
 
 PIPER_EXECUTABLE = os.environ.get("POLYGLOT_PIPER_PATH", "piper")
 VOICE_DIR = os.environ.get(
@@ -22,11 +29,15 @@ def is_tts_available() -> bool:
     return _HAS_PIPER or _piper_binary_exists()
 
 
+@lru_cache(maxsize=1)
 def _piper_binary_exists() -> bool:
+    executable = shutil.which(PIPER_EXECUTABLE)
+    if executable is None:
+        return False
     try:
-        subprocess.run([PIPER_EXECUTABLE, "--help"], capture_output=True, timeout=5)
+        subprocess.run([executable, "--help"], capture_output=True, timeout=5)
         return True
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
         return False
 
 
@@ -60,30 +71,36 @@ def synthesize(text: str, locale: str = "en_US", language: str | None = None) ->
     if not voice:
         return None
 
-    if _piper_binary_exists():
-        return _synthesize_piper_binary(text, voice)
-
     if _HAS_PIPER:
         return _synthesize_piper_library(text, str(voice))
+
+    if _piper_binary_exists():
+        return _synthesize_piper_binary(text, voice)
 
     return None
 
 
-def _synthesize_piper_binary(text: str, voice_path: Path) -> bytes:
+def _synthesize_piper_binary(text: str, voice_path: Path) -> bytes | None:
     with tempfile.NamedTemporaryFile(suffix=".wav") as out:
-        subprocess.run(
-            [PIPER_EXECUTABLE, "--model", str(voice_path), "--output-file", out.name],
+        result = subprocess.run(
+            [PIPER_EXECUTABLE, "--model", str(voice_path), "--output_file", out.name],
             input=text.encode("utf-8"),
             capture_output=True,
             timeout=30,
         )
+        if result.returncode != 0:
+            return None
         return Path(out.name).read_bytes()
 
 
-def _synthesize_piper_library(text: str, voice_path: str) -> bytes:
-    import piper_tts
-
-    pipe = piper_tts.PiperVoice.load(voice_path)
+def _synthesize_piper_library(text: str, voice_path: str) -> bytes | None:
+    pipe = PiperVoice.load(voice_path)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as out:
-        pipe.synthesize(text, out)
-        return Path(out.name).read_bytes()
+        output_path = Path(out.name)
+
+    try:
+        with wave.open(str(output_path), "wb") as wav_file:
+            pipe.synthesize(text, wav_file)
+        return output_path.read_bytes()
+    finally:
+        output_path.unlink(missing_ok=True)

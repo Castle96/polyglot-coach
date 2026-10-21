@@ -41,11 +41,10 @@ Working today:
 - Registry-backed language, level, locale, framework, and feature metadata endpoints
 - Dynamic web selectors and per-language advanced feature focus
 - Server-side validation of language, level, locale, and feature combinations
+- Offline speech-to-text and text-to-speech endpoints with push-to-talk web controls
 
 Not implemented yet:
 
-- Speech-to-text and text-to-speech API endpoints (service modules exist but
-  are not wired to the API)
 - Wake word detection
 - Japanese curriculum (planned; see `curriculum/ja/README.md`)
 - A2–C1 content, despite earlier versions of this README claiming full coverage
@@ -101,16 +100,17 @@ Polyglot Coach is organised into three collaborating layers:
 - **Tutor Layer** for prompt construction, lesson context, and response generation
 - **MCP Layer** for educational tooling, learner state, and curriculum services
 
-The voice stages are not wired into the API yet. The current working path is
-text input → tutor generation → text response.
+The voice stages are wired into the API as optional local endpoints. The web
+client supports push-to-talk transcription and optional spoken tutor replies;
+text input remains fully functional when speech models are not installed.
 
 ## Tech Stack
 
 | Area | Current Implementation | Notes |
 | --- | --- | --- |
 | LLM | Qwen2.5 7B | Default Ollama model; local GGUF via llama-cpp-python is also supported |
-| Speech To Text | Faster Whisper Medium | Service module only; no API endpoint yet |
-| Text To Speech | Piper TTS | Service module and voice manifest only; no API endpoint yet |
+| Speech To Text | Faster Whisper Medium | Optional `speech` extra; local transcription endpoint |
+| Text To Speech | Piper TTS | Optional `speech` extra; local synthesis endpoint |
 | Wake Word | Not implemented | OpenWakeWord is a future integration |
 | Storage | SQLite | Local learner memory and analytics |
 | API | FastAPI | Serves the REST API and the bundled web client |
@@ -196,6 +196,22 @@ uv sync
 
 This pulls the default Ollama model and downloads the Piper voices declared in
 `models/tts/voices.yaml`. Faster Whisper downloads on first use.
+
+### Enable speech (optional)
+
+Text-only tutoring works with the default install. To enable push-to-talk
+transcription and spoken tutor replies:
+
+```bash
+uv sync --extra speech
+./run.sh --download-models
+```
+
+The `speech` extra installs Faster Whisper and Piper. The first transcription
+downloads the Faster Whisper model configured by `POLYGLOT_STT_MODEL`; Piper
+voices are downloaded by `tools/download_voices.py`. If speech dependencies or
+voices are missing, the API returns HTTP 503 and the web client simply disables
+the microphone and reply-playback controls.
 
 ### Run
 
@@ -331,6 +347,20 @@ validates all three against the pack before invoking the model and returns HTTP
 
 Omitting `level` or `locale` selects the pack default. Feature focus is injected
 as structured prompt context; it does not change the curriculum content itself.
+
+### Speech endpoints
+
+Speech is optional and runs entirely locally:
+
+- `GET /api/v1/speech/status` — STT/TTS availability, model name, and voice directory
+- `POST /api/v1/speech/transcribe` — multipart upload (`audio`) plus `language`,
+  optional `level`, and optional `locale`; returns the transcript and detected language
+- `POST /api/v1/speech/synthesize` — JSON `{text, language, level?, locale?}`;
+  returns `audio/wav`
+
+The web client uses these endpoints for push-to-talk transcription and optional
+spoken tutor replies. A missing `speech` extra or a missing Piper voice returns
+HTTP 503 without breaking text-only chat.
 
 ### Level frameworks
 

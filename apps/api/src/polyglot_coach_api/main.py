@@ -9,9 +9,11 @@ from sqlalchemy import text as db_text
 from pathlib import Path
 
 from polyglot_coach_api.data.loader import CURRICULUM_ROOT, load_all_curriculum_data
-from polyglot_coach_api.routers import analytics, conversation, curriculum, dictionary, grammar, learner, locale, meta, review, tutor
+from polyglot_coach_api.routers import analytics, conversation, curriculum, dictionary, grammar, learner, locale, meta, review, speech, tutor
 from polyglot_coach_shared.database import get_session
 from polyglot_coach_api.services.llm import is_llm_available
+from polyglot_coach_api.services.stt import is_stt_available
+from polyglot_coach_api.services.tts import is_tts_available
 
 
 @asynccontextmanager
@@ -51,6 +53,7 @@ app.include_router(locale.router, prefix="/api/v1/locale", tags=["locale"])
 app.include_router(conversation.router, prefix="/api/v1/conversation", tags=["conversation"])
 app.include_router(review.router, prefix="/api/v1/review", tags=["review"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
+app.include_router(speech.router, prefix="/api/v1/speech", tags=["speech"])
 app.include_router(tutor.router, prefix="/api/v1/tutor", tags=["tutor"])
 
 WEB_ROOT = Path(__file__).resolve().parents[4] / "apps" / "web"
@@ -76,5 +79,7 @@ async def health():
         "status": "ok" if db_ok else "degraded",
         "db_connected": db_ok,
         "llm_available": llm_ok,
+        "stt_available": is_stt_available(),
+        "tts_available": is_tts_available(),
         "curriculum_loaded": (Path(CURRICULUM_ROOT) / "registry.yaml").exists(),
     }

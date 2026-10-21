@@ -61,5 +61,8 @@ The final structured tutor response is returned to the Voice Layer for synthesis
 | STT | Faster Whisper Medium | Faster Whisper Large V3 |
 | TTS | Piper TTS | Additional higher-quality locale voice packs |
 
-The voice layer is not wired into the API yet; see the project README for
-current implementation status.
+The voice layer is wired into the API as optional local endpoints. Faster
+Whisper transcription runs in a worker thread, and Piper synthesis returns WAV
+audio. The web client uses these endpoints for push-to-talk input and optional
+spoken tutor replies. Wake-word detection remains unimplemented; text-only
+tutoring works when speech dependencies or voices are not installed.

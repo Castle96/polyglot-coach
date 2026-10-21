@@ -18,8 +18,9 @@ the MCP services, SQLite storage, and on-device model runtimes.
 - `/api/v1/curriculum` — lessons, topics, scenarios
 - `/api/v1/dictionary`, `/api/v1/grammar`, `/api/v1/locale`
 - `/api/v1/conversation`, `/api/v1/review`, `/api/v1/analytics`
+- `/api/v1/speech` — local transcription and synthesis
 - `/api/v1/tutor` — chat, quick-chat, status, and options
-- `/health` — database, LLM, and curriculum status
+- `/health` — database, LLM, STT/TTS, and curriculum status
 
 ## Language metadata
 
@@ -71,4 +72,34 @@ grammar lecture.
 `GET /api/v1/tutor/quick-chat` accepts `features` as a comma-separated query
 parameter for constrained clients.
 
-Speech transcription and synthesis endpoints are not exposed yet.
+## Speech
+
+Speech endpoints are local-only and optional. Install the `speech` extra and
+download the Piper voices described in the project README. Text-only tutoring
+continues to work when either runtime is unavailable.
+
+| Endpoint | Request | Response |
+| --- | --- | --- |
+| `GET /api/v1/speech/status` | — | `stt_available`, `tts_available`, `stt_model`, `tts_voice_dir` |
+| `POST /api/v1/speech/transcribe` | Multipart: `audio` file plus `language`, optional `level` and `locale` | `text`, `detected_language`, `duration`, `language`, `level`, `locale` |
+| `POST /api/v1/speech/synthesize` | JSON: `text`, `language`, optional `level` and `locale` | `audio/wav` body |
+
+Transcription accepts wav, webm, ogg, mp3, m4a, and flac uploads. The language,
+level, and locale are validated against the language pack before the model is
+invoked. Synthesis resolves a locale-specific Piper voice when installed and
+falls back to the base language voice.
+
+```bash
+curl -F "audio=@sample.webm" \
+  -F "language=es" -F "level=A1" -F "locale=es_MX" \
+  http://localhost:8000/api/v1/speech/transcribe
+
+curl -X POST http://localhost:8000/api/v1/speech/synthesize \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hola, ¿cómo estás?","language":"es","level":"A1","locale":"es_MX"}' \
+  --output reply.wav
+```
+
+If the `speech` extra is not installed, transcription and synthesis return HTTP
+503 with setup instructions. Synthesis also returns 503 when the requested
+voice file is missing.
