@@ -10,8 +10,10 @@ Set OLLAMA_MODEL (default: qwen2.5:7b) to choose the model pulled by Ollama.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -19,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from polyglot_coach_api.services.prompts import _MODE_ALIAS, TutorContext, build_tutor_prompt
-from polyglot_coach_shared.database import get_session
+from polyglot_coach_shared.database import session_scope
 from polyglot_coach_shared.languages import (
     features_for,
     get_language,
@@ -33,6 +35,8 @@ from polyglot_coach_shared.models import (
     ProgressRecord,
     VocabularyEntry,
 )
+
+logger = logging.getLogger(__name__)
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
@@ -95,43 +99,39 @@ def _enrich_from_profile(profile_id: int | None, ctx: TutorContext) -> dict[str,
         return extra
 
     try:
-        session = get_session()
+        with session_scope() as session:
+            profile = session.query(LearnerProfile).filter(LearnerProfile.id == profile_id).first()
+            if profile is None:
+                return extra
 
-        profile = session.query(LearnerProfile).filter(LearnerProfile.id == profile_id).first()
-        if profile is None:
-            session.close()
-            return extra
+            ctx.learner_name = profile.name
+            ctx.native_language = profile.native_language
+            # Level and locale come from the validated session request. The profile
+            # supplies defaults to the UI, but must not silently override selectors.
 
-        ctx.learner_name = profile.name
-        ctx.native_language = profile.native_language
-        # Level and locale come from the validated session request. The profile
-        # supplies defaults to the UI, but must not silently override selectors.
-
-        vocab_count = (
-            session.query(VocabularyEntry)
-            .filter(
-                VocabularyEntry.profile_id == profile_id,
+            vocab_count = (
+                session.query(VocabularyEntry)
+                .filter(
+                    VocabularyEntry.profile_id == profile_id,
+                )
+                .count()
             )
-            .count()
-        )
-        if vocab_count:
-            extra["vocabulary_count"] = vocab_count
+            if vocab_count:
+                extra["vocabulary_count"] = vocab_count
 
-        recent_mistakes = (
-            session.query(MistakeRecord)
-            .filter(MistakeRecord.profile_id == profile_id)
-            .order_by(MistakeRecord.created_at.desc())
-            .limit(5)
-            .all()
-        )
-        if recent_mistakes:
-            extra["recent_mistakes"] = [
-                {"category": m.category, "correction": m.correction} for m in recent_mistakes
-            ]
-
-        session.close()
+            recent_mistakes = (
+                session.query(MistakeRecord)
+                .filter(MistakeRecord.profile_id == profile_id)
+                .order_by(MistakeRecord.created_at.desc())
+                .limit(5)
+                .all()
+            )
+            if recent_mistakes:
+                extra["recent_mistakes"] = [
+                    {"category": m.category, "correction": m.correction} for m in recent_mistakes
+                ]
     except Exception:
-        pass
+        logger.warning("Could not enrich tutor context from profile %s", profile_id, exc_info=True)
 
     return extra
 
@@ -146,34 +146,31 @@ def _enrich_due_words(profile_id: int | None, language: str, extra: dict[str, An
         if due:
             extra["due_words"] = due
     except Exception:
-        pass
+        logger.warning("Could not load due review words for profile %s", profile_id, exc_info=True)
 
 
 def _enrich_curriculum(language: str, level: str, extra: dict[str, Any]) -> None:
     try:
-        session = get_session()
+        with session_scope() as session:
+            rules = (
+                session.query(GrammarRule)
+                .filter(GrammarRule.language == language, GrammarRule.level == level)
+                .limit(5)
+                .all()
+            )
+            if rules:
+                extra["grammar_rules"] = [{"title": r.title, "category": r.category} for r in rules]
 
-        rules = (
-            session.query(GrammarRule)
-            .filter(GrammarRule.language == language, GrammarRule.level == level)
-            .limit(5)
-            .all()
-        )
-        if rules:
-            extra["grammar_rules"] = [{"title": r.title, "category": r.category} for r in rules]
-
-        vocab = (
-            session.query(VocabularyEntry)
-            .filter(VocabularyEntry.language == language, VocabularyEntry.profile_id == 0)
-            .limit(10)
-            .all()
-        )
-        if vocab:
-            extra["curriculum_vocab"] = [{"word": v.word, "tags": v.tags or ""} for v in vocab]
-
-        session.close()
+            vocab = (
+                session.query(VocabularyEntry)
+                .filter(VocabularyEntry.language == language, VocabularyEntry.profile_id == 0)
+                .limit(10)
+                .all()
+            )
+            if vocab:
+                extra["curriculum_vocab"] = [{"word": v.word, "tags": v.tags or ""} for v in vocab]
     except Exception:
-        pass
+        logger.warning("Could not enrich tutor context from curriculum", exc_info=True)
 
 
 # ---------------------------------------------------------------------------
@@ -202,7 +199,7 @@ def _store_corrections(
                 context=f"{ctx.mode} session — {ctx.language} {ctx.level}",
             )
     except Exception:
-        pass
+        logger.warning("Could not record corrections for profile %s", profile_id, exc_info=True)
 
 
 def _record_progress(
@@ -214,18 +211,17 @@ def _record_progress(
     if profile_id is None:
         return
     try:
-        session = get_session()
-        record = ProgressRecord(
-            profile_id=profile_id,
-            event_type=event_type,
-            detail=detail,
-            score=score,
-        )
-        session.add(record)
-        session.commit()
-        session.close()
+        with session_scope() as session:
+            session.add(
+                ProgressRecord(
+                    profile_id=profile_id,
+                    event_type=event_type,
+                    detail=detail,
+                    score=score,
+                )
+            )
     except Exception:
-        pass
+        logger.warning("Could not record progress for profile %s", profile_id, exc_info=True)
 
 
 def _schedule_vocab_review(
@@ -242,7 +238,9 @@ def _schedule_vocab_review(
             if word and len(word) > 1:
                 schedule_review(profile_id=profile_id, word=word, language=language)
     except Exception:
-        pass
+        logger.warning(
+            "Could not schedule vocabulary review for profile %s", profile_id, exc_info=True
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -294,19 +292,35 @@ def _ollama_pull(model: str) -> None:
 
 _LLM_BACKEND: str | None = None
 _llama_model = None
+_BACKEND_CHECK_INTERVAL = 10.0
+_last_backend_check = 0.0
 
 
-def _detect_backend() -> str | None:
-    global _LLM_BACKEND
+def _detect_backend(force: bool = False) -> str | None:
+    """Return the active LLM backend without provisioning anything.
+
+    Detection is intentionally cheap: it never downloads a model. Pulling is an
+    explicit operation via :func:`ensure_ollama_model` or the CLI/run script, so
+    health checks and requests can never trigger a multi-gigabyte download.
+    """
+    global _LLM_BACKEND, _last_backend_check
     if _LLM_BACKEND:
         return _LLM_BACKEND
 
+    now = time.monotonic()
+    if not force and now - _last_backend_check < _BACKEND_CHECK_INTERVAL:
+        return None
+    _last_backend_check = now
+
     if _ollama_running():
-        model = OLLAMA_MODEL
-        if not _ollama_model_pulled(model):
-            _ollama_pull(model)
-        _LLM_BACKEND = "ollama"
-        return _LLM_BACKEND
+        if _ollama_model_pulled(OLLAMA_MODEL):
+            _LLM_BACKEND = "ollama"
+            return _LLM_BACKEND
+        logger.warning(
+            "Ollama is running but model %s is not pulled; run `ollama pull %s`",
+            OLLAMA_MODEL,
+            OLLAMA_MODEL,
+        )
 
     if _HAS_LLAMA_CPP and GGUF_PATH and Path(GGUF_PATH).exists():
         _LLM_BACKEND = "llama-cpp"
@@ -317,6 +331,19 @@ def _detect_backend() -> str | None:
 
 def is_llm_available() -> bool:
     return _detect_backend() is not None
+
+
+def ensure_ollama_model() -> bool:
+    """Pull the configured Ollama model if Ollama is reachable.
+
+    This is provisioning, not detection. Never call it from a request path.
+    """
+    if not _ollama_running():
+        return False
+    if _ollama_model_pulled(OLLAMA_MODEL):
+        return True
+    _ollama_pull(OLLAMA_MODEL)
+    return _ollama_model_pulled(OLLAMA_MODEL)
 
 
 def load_model():
@@ -483,11 +510,15 @@ def generate_tutor_response(
     )
 
     backend = _detect_backend()
-    if backend == "ollama":
-        raw = _chat_ollama(message, ctx, extra, history)
-    elif backend == "llama-cpp":
-        raw = _chat_llamacpp(message, ctx, extra, history)
-    else:
+    try:
+        if backend == "ollama":
+            raw = _chat_ollama(message, ctx, extra, history)
+        elif backend == "llama-cpp":
+            raw = _chat_llamacpp(message, ctx, extra, history)
+        else:
+            raw = _fallback_response(ctx)
+    except Exception:
+        logger.exception("LLM backend %r failed; returning fallback response", backend)
         raw = _fallback_response(ctx)
 
     reply, corrections = _parse_corrections(raw)

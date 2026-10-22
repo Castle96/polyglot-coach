@@ -20,6 +20,7 @@ from polyglot_coach_api.validation import resolve_language_request
 router = APIRouter()
 
 AUDIO_SUFFIXES = {".wav", ".webm", ".ogg", ".mp3", ".m4a", ".flac"}
+MAX_AUDIO_BYTES = 15 * 1024 * 1024
 
 
 class SynthesizeRequest(BaseModel):
@@ -60,9 +61,14 @@ async def api_transcribe(
             "Speech-to-text is not installed. Run `uv sync --extra speech` and restart the API.",
         )
 
-    data = await audio.read()
+    data = await audio.read(MAX_AUDIO_BYTES + 1)
     if not data:
         raise HTTPException(422, "Audio upload is empty.")
+    if len(data) > MAX_AUDIO_BYTES:
+        raise HTTPException(
+            413,
+            f"Audio upload exceeds the {MAX_AUDIO_BYTES // (1024 * 1024)} MB limit.",
+        )
 
     suffix = Path(audio.filename or "").suffix.lower()
     if suffix not in AUDIO_SUFFIXES:

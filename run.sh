@@ -87,4 +87,13 @@ echo "  STT:        $POLYGLOT_STT_MODEL"
 echo "  TTS:        $POLYGLOT_TTS_VOICE_DIR"
 echo ""
 
+# Provisioning is explicit: backend detection never pulls models.
+if command -v ollama &>/dev/null; then
+    if ! ollama list 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -qx "$OLLAMA_MODEL"; then
+        echo "Ollama model $OLLAMA_MODEL is not installed; pulling it now..."
+        ollama pull "$OLLAMA_MODEL" || \
+            echo "WARNING: could not pull $OLLAMA_MODEL; the API will run without an LLM."
+    fi
+fi
+
 uv run uvicorn polyglot_coach_api.main:app --host 0.0.0.0 --port 8000 --reload
