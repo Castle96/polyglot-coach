@@ -1,10 +1,19 @@
 """LLM integration for Polyglot Coach.
 
-Supports two backends, checked in order:
-  1. Ollama (recommended) — talks to local Ollama server at OLLAMA_HOST
-  2. llama-cpp-python — loads a GGUF file from POLYGLOT_LLM_MODEL_PATH
+Backends, chosen by ``POLYGLOT_LLM_PROVIDER`` (default: ``auto``):
+  1. ``openai`` — any OpenAI-compatible chat completions API (OpenAI,
+     OpenRouter, Groq, Together, vLLM, LM Studio, Ollama's /v1, …)
+  2. ``ollama`` — local Ollama server at OLLAMA_HOST
+  3. ``llama-cpp`` — local GGUF via llama-cpp-python
 
-Set OLLAMA_MODEL (default: qwen2.5:7b) to choose the model pulled by Ollama.
+``auto`` prefers an explicitly configured OpenAI-compatible provider
+(``POLYGLOT_OPENAI_API_KEY``), then Ollama, then llama-cpp. A bare
+``OPENAI_API_KEY`` is only used when ``POLYGLOT_LLM_PROVIDER=openai`` so that an
+unrelated key in the environment never causes unexpected cloud usage.
+
+Users can also bring their own key per request: the web client sends
+``X-Polyglot-LLM-API-Key``, ``X-Polyglot-LLM-Base-URL``, and
+``X-Polyglot-LLM-Model`` headers, which override the server configuration.
 """
 
 from __future__ import annotations
@@ -19,6 +28,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from polyglot_coach_api.services.prompts import _MODE_ALIAS, TutorContext, build_tutor_prompt
 from polyglot_coach_shared.database import session_scope
@@ -42,6 +52,14 @@ OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
 GGUF_PATH = os.environ.get("POLYGLOT_LLM_MODEL_PATH", "")
 
+DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+DEFAULT_OPENAI_TIMEOUT = 90.0
+MAX_API_KEY_LENGTH = 500
+MAX_BASE_URL_LENGTH = 500
+MAX_MODEL_LENGTH = 200
+VALID_PROVIDERS = {"auto", "openai", "ollama", "llama-cpp"}
+
 _HAS_LLAMA_CPP = False
 try:
     import llama_cpp  # noqa: F401
@@ -62,6 +80,152 @@ class ParsedCorrection:
 class TutorResult:
     reply: str
     corrections: list[ParsedCorrection] = field(default_factory=list)
+
+
+class LLMProviderError(RuntimeError):
+    """A configured LLM provider could not produce a response."""
+
+
+@dataclass(frozen=True)
+class OpenAICompatibleConfig:
+    base_url: str
+    api_key: str
+    model: str
+    timeout: float = DEFAULT_OPENAI_TIMEOUT
+
+
+@dataclass(frozen=True)
+class LLMOverrides:
+    """Per-request provider settings supplied by a client (bring your own key)."""
+
+    api_key: str = ""
+    base_url: str | None = None
+    model: str | None = None
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.api_key)
+
+
+def build_overrides(
+    api_key: str | None = None,
+    base_url: str | None = None,
+    model: str | None = None,
+) -> LLMOverrides | None:
+    """Validate and normalize optional per-request provider headers."""
+    api_key = (api_key or "").strip()
+    base_url = (base_url or "").strip() or None
+    model = (model or "").strip() or None
+
+    if not api_key:
+        if base_url or model:
+            raise ValueError("An API key is required when setting a provider URL or model.")
+        return None
+
+    if len(api_key) > MAX_API_KEY_LENGTH:
+        raise ValueError(f"API key exceeds {MAX_API_KEY_LENGTH} characters.")
+    if base_url:
+        if len(base_url) > MAX_BASE_URL_LENGTH:
+            raise ValueError(f"Base URL exceeds {MAX_BASE_URL_LENGTH} characters.")
+        parsed = urlparse(base_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError("Base URL must be an http:// or https:// URL.")
+        if parsed.username or parsed.password:
+            raise ValueError("Base URL must not include credentials; use the API key field.")
+    if model and len(model) > MAX_MODEL_LENGTH:
+        raise ValueError(f"Model name exceeds {MAX_MODEL_LENGTH} characters.")
+
+    return LLMOverrides(api_key=api_key, base_url=base_url, model=model)
+
+
+def _configured_provider() -> str:
+    provider = os.environ.get("POLYGLOT_LLM_PROVIDER", "auto").strip().lower()
+    if provider not in VALID_PROVIDERS:
+        logger.warning(
+            "Unknown POLYGLOT_LLM_PROVIDER=%r; falling back to 'auto'. Valid values: %s",
+            provider,
+            ", ".join(sorted(VALID_PROVIDERS)),
+        )
+        return "auto"
+    return provider
+
+
+def _env_openai_config() -> OpenAICompatibleConfig | None:
+    provider = _configured_provider()
+    if provider not in {"auto", "openai"}:
+        return None
+
+    api_key = os.environ.get("POLYGLOT_OPENAI_API_KEY", "").strip()
+    if not api_key and provider == "openai":
+        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        return None
+
+    base_url = os.environ.get("POLYGLOT_OPENAI_BASE_URL", "").strip() or DEFAULT_OPENAI_BASE_URL
+    parsed = urlparse(base_url)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.netloc
+        or parsed.username
+        or parsed.password
+    ):
+        logger.warning(
+            "POLYGLOT_OPENAI_BASE_URL=%r is not a valid http(s) URL without credentials; "
+            "provider disabled",
+            base_url,
+        )
+        return None
+
+    model = os.environ.get("POLYGLOT_OPENAI_MODEL", "").strip() or DEFAULT_OPENAI_MODEL
+    try:
+        timeout = float(os.environ.get("POLYGLOT_OPENAI_TIMEOUT", DEFAULT_OPENAI_TIMEOUT))
+    except ValueError:
+        timeout = DEFAULT_OPENAI_TIMEOUT
+    if not 1.0 <= timeout <= 600.0:
+        timeout = DEFAULT_OPENAI_TIMEOUT
+    return OpenAICompatibleConfig(
+        base_url=base_url.rstrip("/"),
+        api_key=api_key,
+        model=model,
+        timeout=timeout,
+    )
+
+
+def _resolve_openai_config(
+    overrides: LLMOverrides | None = None,
+) -> OpenAICompatibleConfig | None:
+    if overrides and overrides.enabled:
+        env = _env_openai_config()
+        return OpenAICompatibleConfig(
+            base_url=(
+                overrides.base_url or (env.base_url if env else None) or DEFAULT_OPENAI_BASE_URL
+            ).rstrip("/"),
+            api_key=overrides.api_key,
+            model=overrides.model or (env.model if env else None) or DEFAULT_OPENAI_MODEL,
+            timeout=env.timeout if env else DEFAULT_OPENAI_TIMEOUT,
+        )
+    return _env_openai_config()
+
+
+def provider_info() -> dict[str, str | None]:
+    """Describe the active server-level provider without exposing credentials."""
+    backend = _detect_backend()
+    if backend == "openai":
+        config = _env_openai_config()
+        return {
+            "provider": "openai",
+            "model": config.model if config else None,
+            "base_url": config.base_url if config else None,
+        }
+    if backend == "ollama":
+        return {"provider": "ollama", "model": OLLAMA_MODEL, "base_url": OLLAMA_HOST}
+    if backend == "llama-cpp":
+        return {
+            "provider": "llama-cpp",
+            "model": Path(GGUF_PATH).name if GGUF_PATH else None,
+            "base_url": None,
+        }
+    return {"provider": None, "model": None, "base_url": None}
 
 
 # ---------------------------------------------------------------------------
@@ -312,7 +476,20 @@ def _detect_backend(force: bool = False) -> str | None:
         return None
     _last_backend_check = now
 
-    if _ollama_running():
+    provider = _configured_provider()
+
+    if provider in {"auto", "openai"}:
+        if _env_openai_config() is not None:
+            _LLM_BACKEND = "openai"
+            return _LLM_BACKEND
+        if provider == "openai":
+            logger.warning(
+                "POLYGLOT_LLM_PROVIDER=openai requires POLYGLOT_OPENAI_API_KEY "
+                "(or OPENAI_API_KEY); no provider is configured."
+            )
+            return None
+
+    if provider in {"auto", "ollama"} and _ollama_running():
         if _ollama_model_pulled(OLLAMA_MODEL):
             _LLM_BACKEND = "ollama"
             return _LLM_BACKEND
@@ -322,9 +499,10 @@ def _detect_backend(force: bool = False) -> str | None:
             OLLAMA_MODEL,
         )
 
-    if _HAS_LLAMA_CPP and GGUF_PATH and Path(GGUF_PATH).exists():
-        _LLM_BACKEND = "llama-cpp"
-        return _LLM_BACKEND
+    if provider in {"auto", "llama-cpp"}:
+        if _HAS_LLAMA_CPP and GGUF_PATH and Path(GGUF_PATH).exists():
+            _LLM_BACKEND = "llama-cpp"
+            return _LLM_BACKEND
 
     return None
 
@@ -435,6 +613,102 @@ def _build_messages(system: str, history: list[dict], message: str) -> list[dict
     return messages
 
 
+def _chat_completions_url(base_url: str) -> str:
+    base = base_url.rstrip("/")
+    if base.endswith("/chat/completions"):
+        return base
+    if not base.endswith("/v1"):
+        base = f"{base}/v1"
+    return f"{base}/chat/completions"
+
+
+def _redact_secret(text: str, secret: str) -> str:
+    """Keep provider responses from echoing a credential back to the client."""
+    if secret:
+        return text.replace(secret, "[redacted]")
+    return text
+
+
+def _provider_error_detail(exc: urllib.error.HTTPError) -> str:
+    try:
+        raw = exc.read(1000).decode("utf-8", "replace").strip()
+    except Exception:
+        return str(exc.reason or "no response body")
+    if not raw:
+        return str(exc.reason or "no response body")
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return raw[:300]
+    error = data.get("error") if isinstance(data, dict) else None
+    if isinstance(error, dict):
+        return str(error.get("message") or error)[:300]
+    if error:
+        return str(error)[:300]
+    message = data.get("message") if isinstance(data, dict) else None
+    return str(message or raw)[:300]
+
+
+def _chat_openai(
+    message: str,
+    ctx: TutorContext,
+    extra: dict[str, Any],
+    history: list[dict],
+    config: OpenAICompatibleConfig,
+) -> str:
+    system = build_tutor_prompt(ctx, history, extra)
+    messages = _build_messages(system, history, message)
+    body = json.dumps(
+        {
+            "model": config.model,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 512,
+            "stream": False,
+        }
+    ).encode()
+    req = urllib.request.Request(
+        _chat_completions_url(config.base_url),
+        data=body,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {config.api_key}",
+            "User-Agent": "polyglot-coach/0.1",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=config.timeout) as resp:
+            payload = resp.read()
+    except urllib.error.HTTPError as exc:
+        detail = _redact_secret(_provider_error_detail(exc), config.api_key)
+        raise LLMProviderError(f"LLM provider returned HTTP {exc.code}: {detail}") from exc
+    except urllib.error.URLError as exc:
+        detail = _redact_secret(str(exc.reason), config.api_key)
+        raise LLMProviderError(
+            f"Could not reach LLM provider at {config.base_url}: {detail}"
+        ) from exc
+    except TimeoutError as exc:
+        raise LLMProviderError("The LLM provider timed out.") from exc
+
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise LLMProviderError("The LLM provider returned invalid JSON.") from exc
+
+    choices = data.get("choices") or []
+    if not choices:
+        raise LLMProviderError("The LLM provider returned no choices.")
+    content = (choices[0].get("message") or {}).get("content")
+    if isinstance(content, list):
+        content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+    if not isinstance(content, str) or not content.strip():
+        raise LLMProviderError("The LLM provider returned an empty response.")
+    return content.strip()
+
+
 def _chat_ollama(
     message: str,
     ctx: TutorContext,
@@ -494,6 +768,7 @@ def generate_tutor_response(
     scenario_context: str | None = None,
     vocabulary_hints: list[str] | None = None,
     feature_focus: list[str] | None = None,
+    overrides: LLMOverrides | None = None,
 ) -> TutorResult:
     ctx, extra = _make_context(
         language=language,
@@ -509,14 +784,21 @@ def generate_tutor_response(
         feature_focus=feature_focus,
     )
 
-    backend = _detect_backend()
+    backend = "openai" if (overrides and overrides.enabled) else _detect_backend()
     try:
-        if backend == "ollama":
+        if backend == "openai":
+            config = _resolve_openai_config(overrides)
+            if config is None:
+                raise LLMProviderError("No OpenAI-compatible provider is configured.")
+            raw = _chat_openai(message, ctx, extra, history, config)
+        elif backend == "ollama":
             raw = _chat_ollama(message, ctx, extra, history)
         elif backend == "llama-cpp":
             raw = _chat_llamacpp(message, ctx, extra, history)
         else:
             raw = _fallback_response(ctx)
+    except LLMProviderError:
+        raise
     except Exception:
         logger.exception("LLM backend %r failed; returning fallback response", backend)
         raw = _fallback_response(ctx)

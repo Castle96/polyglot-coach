@@ -24,7 +24,7 @@ from polyglot_coach_api.routers import (
     tutor,
 )
 from polyglot_coach_shared.database import session_scope
-from polyglot_coach_api.services.llm import is_llm_available
+from polyglot_coach_api.services.llm import is_llm_available, provider_info
 from polyglot_coach_api.services.stt import is_stt_available
 from polyglot_coach_api.services.tts import is_tts_available
 
@@ -102,10 +102,13 @@ def _curriculum_ready() -> bool:
 def health():
     """Liveness-style status. Never provisions models or downloads anything."""
     db_ok = _database_ready()
+    info = provider_info()
     return {
         "status": "ok" if db_ok else "degraded",
         "db_connected": db_ok,
-        "llm_available": is_llm_available(),
+        "llm_available": info["provider"] is not None,
+        "llm_provider": info["provider"],
+        "llm_model": info["model"],
         "stt_available": is_stt_available(),
         "tts_available": is_tts_available(),
         "curriculum_loaded": _curriculum_ready(),

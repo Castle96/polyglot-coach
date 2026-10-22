@@ -31,7 +31,8 @@ services, web chat client, and three language packs are functional.
 
 Working today:
 
-- FastAPI tutor endpoints backed by Ollama or a local GGUF model
+- FastAPI tutor endpoints backed by Ollama, a local GGUF model, or any
+  OpenAI-compatible API (bring your own key)
 - SQLite learner memory, mistakes, review scheduling, and progress records
 - MCP services for learner memory, curriculum, dictionary, grammar, locale,
   conversation, review, and analytics
@@ -108,7 +109,7 @@ text input remains fully functional when speech models are not installed.
 
 | Area | Current Implementation | Notes |
 | --- | --- | --- |
-| LLM | Qwen2.5 7B | Default Ollama model; local GGUF via llama-cpp-python is also supported |
+| LLM | Qwen2.5 7B | Default Ollama model; local GGUF via llama-cpp-python and any OpenAI-compatible API are also supported |
 | Speech To Text | Faster Whisper Medium | Optional `speech` extra; local transcription endpoint |
 | Text To Speech | Piper TTS | Optional `speech` extra; local synthesis endpoint |
 | Wake Word | Not implemented | OpenWakeWord is a future integration |
@@ -176,7 +177,8 @@ name-based directories (`curriculum/spanish`, `curriculum/french`,
 
 - Python 3.12+
 - [uv](https://github.com/astral-sh/uv)
-- [Ollama](https://ollama.ai) or a local GGUF model
+- One LLM backend: [Ollama](https://ollama.ai), a local GGUF model, or an
+  OpenAI-compatible API and key
 - Node 20+ and [pnpm](https://pnpm.io/) only to run the workspace lint scripts;
   the bundled web client is static and needs no Node build
 
@@ -195,7 +197,66 @@ uv sync
 ```
 
 This pulls the default Ollama model and downloads the Piper voices declared in
-`models/tts/voices.yaml`. Faster Whisper downloads on first use.
+`models/tts/voices.yaml`. Faster Whisper downloads on first use. If you use an
+OpenAI-compatible provider, `run.sh --download-models` skips the Ollama pull.
+
+### Use an OpenAI-compatible provider (optional)
+
+Polyglot Coach can talk to any service that implements the OpenAI chat
+completions API: OpenAI, OpenRouter, Groq, Together, DeepSeek, vLLM, LM Studio,
+Ollama's OpenAI-compatible endpoint, and similar providers. Local Ollama remains
+the default; a cloud provider is only used when you configure one.
+
+Server-level configuration:
+
+```bash
+export POLYGLOT_LLM_PROVIDER=openai
+export POLYGLOT_OPENAI_API_KEY=sk-...
+export POLYGLOT_OPENAI_BASE_URL=https://api.openai.com/v1
+export POLYGLOT_OPENAI_MODEL=gpt-4o-mini
+./run.sh
+```
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `POLYGLOT_LLM_PROVIDER` | `auto` | `auto`, `openai`, `ollama`, or `llama-cpp` |
+| `POLYGLOT_OPENAI_API_KEY` | — | Key used by `auto` and `openai` |
+| `POLYGLOT_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Provider API root; `/v1` is added if omitted |
+| `POLYGLOT_OPENAI_MODEL` | `gpt-4o-mini` | Model name understood by that provider |
+| `POLYGLOT_OPENAI_TIMEOUT` | `90` | Request timeout in seconds |
+
+`auto` selects an OpenAI-compatible provider only when
+`POLYGLOT_OPENAI_API_KEY` is set, then falls back to Ollama and llama-cpp. A bare
+`OPENAI_API_KEY` is honored only when `POLYGLOT_LLM_PROVIDER=openai`, so an
+unrelated key in your shell cannot silently incur cloud usage.
+
+Examples for other providers:
+
+```bash
+# OpenRouter
+export POLYGLOT_OPENAI_BASE_URL=https://openrouter.ai/api/v1
+export POLYGLOT_OPENAI_MODEL=openai/gpt-4o-mini
+
+# Groq
+export POLYGLOT_OPENAI_BASE_URL=https://api.groq.com/openai/v1
+export POLYGLOT_OPENAI_MODEL=llama-3.3-70b-versatile
+
+# Local LM Studio or vLLM
+export POLYGLOT_OPENAI_BASE_URL=http://localhost:1234/v1
+export POLYGLOT_OPENAI_MODEL=your-local-model
+```
+
+You can also bring a key per browser session without changing server
+configuration. Open **Model Provider** in the web sidebar, choose
+**OpenAI-compatible (own key)**, and enter the base URL, model, and key. The base
+URL and model are stored in `localStorage`; the key is stored in
+`sessionStorage` (this tab only) and sent to the local API in request headers.
+The server does not persist it. Requests still go through the API server, so use
+HTTPS if you expose the app beyond localhost.
+
+Provider errors (bad key, rate limit, unreachable host) return HTTP 502 with a
+short provider message. Health and status endpoints report the active provider
+and model, never the API key.
 
 ### Enable speech (optional)
 
@@ -412,6 +473,31 @@ The Compose and Kubernetes manifests mount the curriculum and storage
 directories and set `POLYGLOT_CURRICULUM_PATH` and `POLYGLOT_DB_PATH`
 explicitly. The image also includes the curriculum as a fallback for standalone
 runs.
+
+To use a hosted provider in Kubernetes, create a secret and reference it from
+the deployment instead of putting the key in a manifest:
+
+```bash
+kubectl -n polyglot-coach create secret generic polyglot-llm \
+  --from-literal=api-key='sk-...'
+```
+
+```yaml
+env:
+  - name: POLYGLOT_LLM_PROVIDER
+    value: openai
+  - name: POLYGLOT_OPENAI_MODEL
+    value: gpt-4o-mini
+  - name: POLYGLOT_OPENAI_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: polyglot-llm
+        key: api-key
+```
+
+The checked-in deployment still points at Ollama. Keep `POLYGLOT_LLM_PROVIDER`
+unset (or `auto`) if you want the in-cluster Ollama service to remain the
+default.
 
 ## Contributing
 
