@@ -6,26 +6,28 @@ from polyglot_coach_shared.models import GrammarRule
 
 def _seed_rules():
     session = get_session(":memory:")
-    session.add_all([
-        GrammarRule(
-            language="es",
-            rule_id="es_verb_ser_estar",
-            title="Ser vs Estar",
-            explanation="Ser is for permanent states, estar for temporary.",
-            examples="Soy alto.\nEstoy cansado.",
-            level="A1",
-            category="verbs",
-        ),
-        GrammarRule(
-            language="es",
-            rule_id="es_noun_gender",
-            title="Noun Gender",
-            explanation="Spanish nouns are masculine or feminine.",
-            examples="El libro\nLa casa",
-            level="A1",
-            category="nouns",
-        ),
-    ])
+    session.add_all(
+        [
+            GrammarRule(
+                language="es",
+                rule_id="es_verb_ser_estar",
+                title="Ser vs Estar",
+                explanation="Ser is for permanent states, estar for temporary.",
+                examples="Soy alto.\nEstoy cansado.",
+                level="A1",
+                category="verbs",
+            ),
+            GrammarRule(
+                language="es",
+                rule_id="es_noun_gender",
+                title="Noun Gender",
+                explanation="Spanish nouns are masculine or feminine.",
+                examples="El libro\nLa casa",
+                level="A1",
+                category="nouns",
+            ),
+        ]
+    )
     session.commit()
     session.close()
 

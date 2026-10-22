@@ -6,11 +6,31 @@ from polyglot_coach_shared.models import LocaleOverride
 
 def _seed_overrides():
     session = get_session(":memory:")
-    session.add_all([
-        LocaleOverride(locale="es_MX", language="es", standard_word="ordenador", local_word="computadora", notes="Mexico"),
-        LocaleOverride(locale="es_MX", language="es", standard_word="coche", local_word="carro", notes="Mexico"),
-        LocaleOverride(locale="fr_CA", language="fr", standard_word="petit-déjeuner", local_word="déjeuner", notes="Quebec"),
-    ])
+    session.add_all(
+        [
+            LocaleOverride(
+                locale="es_MX",
+                language="es",
+                standard_word="ordenador",
+                local_word="computadora",
+                notes="Mexico",
+            ),
+            LocaleOverride(
+                locale="es_MX",
+                language="es",
+                standard_word="coche",
+                local_word="carro",
+                notes="Mexico",
+            ),
+            LocaleOverride(
+                locale="fr_CA",
+                language="fr",
+                standard_word="petit-déjeuner",
+                local_word="déjeuner",
+                notes="Quebec",
+            ),
+        ]
+    )
     session.commit()
     session.close()
 

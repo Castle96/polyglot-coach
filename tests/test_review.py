@@ -1,8 +1,6 @@
 """Tests for the review MCP service."""
 
 
-
-
 def test_get_due_words_empty():
     from review import get_due_words
 

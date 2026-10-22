@@ -20,8 +20,14 @@ async def handle_list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "language": {"type": "string", "description": "Language code (e.g. 'es', 'fr')"},
-                    "level": {"type": "string", "description": "Level within the language's framework (CEFR A1-C2 or JLPT N5-N1)"},
+                    "language": {
+                        "type": "string",
+                        "description": "Language code (e.g. 'es', 'fr')",
+                    },
+                    "level": {
+                        "type": "string",
+                        "description": "Level within the language's framework (CEFR A1-C2 or JLPT N5-N1)",
+                    },
                 },
                 "required": ["language", "level"],
             },
@@ -33,7 +39,10 @@ async def handle_list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "language": {"type": "string", "description": "Language code"},
-                    "level": {"type": "string", "description": "Optional level filter within the language's framework"},
+                    "level": {
+                        "type": "string",
+                        "description": "Optional level filter within the language's framework",
+                    },
                 },
                 "required": ["language"],
             },

@@ -6,7 +6,13 @@ from polyglot_coach_shared.models import LearnerProfile, ProgressRecord
 
 def _create_profile(name="Alice", target="es", level="A1") -> int:
     session = get_session(":memory:")
-    p = LearnerProfile(name=name, native_language="en", target_language=target, locale="es_MX", proficiency_level=level)
+    p = LearnerProfile(
+        name=name,
+        native_language="en",
+        target_language=target,
+        locale="es_MX",
+        proficiency_level=level,
+    )
     session.add(p)
     session.commit()
     profile_id = p.id
@@ -69,7 +75,9 @@ def test_get_progress_with_records():
     from learner_memory import get_progress
 
     session = get_session(":memory:")
-    session.add(ProgressRecord(profile_id=0, event_type="test_event", detail="test detail", score=90.0))
+    session.add(
+        ProgressRecord(profile_id=0, event_type="test_event", detail="test detail", score=90.0)
+    )
     session.commit()
     session.close()
 

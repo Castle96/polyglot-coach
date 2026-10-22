@@ -9,7 +9,19 @@ from sqlalchemy import text as db_text
 from pathlib import Path
 
 from polyglot_coach_api.data.loader import CURRICULUM_ROOT, load_all_curriculum_data
-from polyglot_coach_api.routers import analytics, conversation, curriculum, dictionary, grammar, learner, locale, meta, review, speech, tutor
+from polyglot_coach_api.routers import (
+    analytics,
+    conversation,
+    curriculum,
+    dictionary,
+    grammar,
+    learner,
+    locale,
+    meta,
+    review,
+    speech,
+    tutor,
+)
 from polyglot_coach_shared.database import get_session
 from polyglot_coach_api.services.llm import is_llm_available
 from polyglot_coach_api.services.stt import is_stt_available

@@ -6,26 +6,28 @@ from polyglot_coach_shared.models import ConversationScenario
 
 def _seed_scenarios():
     session = get_session(":memory:")
-    session.add_all([
-        ConversationScenario(
-            language="fr",
-            title="Au restaurant",
-            context="Order a meal at a restaurant.",
-            level="A2",
-            roles="Client, Serveur",
-            vocabulary_hints="menu, addition, plat",
-            grammar_focus="je voudrais",
-        ),
-        ConversationScenario(
-            language="es",
-            title="En el mercado",
-            context="Buy fruits at the market.",
-            level="A1",
-            roles="Cliente, Vendedor",
-            vocabulary_hints="manzana, plátano, precio",
-            grammar_focus="quisiera, cuánto cuesta",
-        ),
-    ])
+    session.add_all(
+        [
+            ConversationScenario(
+                language="fr",
+                title="Au restaurant",
+                context="Order a meal at a restaurant.",
+                level="A2",
+                roles="Client, Serveur",
+                vocabulary_hints="menu, addition, plat",
+                grammar_focus="je voudrais",
+            ),
+            ConversationScenario(
+                language="es",
+                title="En el mercado",
+                context="Buy fruits at the market.",
+                level="A1",
+                roles="Cliente, Vendedor",
+                vocabulary_hints="manzana, plátano, precio",
+                grammar_focus="quisiera, cuánto cuesta",
+            ),
+        ]
+    )
     session.commit()
     session.close()
 
@@ -75,6 +77,8 @@ def test_suggest_followup():
     from conversation import suggest_followup
 
     _seed_scenarios()
-    result = suggest_followup(scenario_id=1, conversation_history=["Bonjour", "Je voudrais un café"])
+    result = suggest_followup(
+        scenario_id=1, conversation_history=["Bonjour", "Je voudrais un café"]
+    )
     assert result["scenario_id"] == 1
     assert len(result["conversation_history"]) == 2

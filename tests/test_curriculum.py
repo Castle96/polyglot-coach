@@ -6,29 +6,31 @@ from polyglot_coach_shared.models import ConversationScenario
 
 def _seed_scenarios():
     session = get_session(":memory:")
-    session.add_all([
-        ConversationScenario(
-            language="fr",
-            title="Au restaurant: Commander un repas",
-            context="You are at a restaurant. Order a meal.",
-            level="A2",
-            roles="Client, Serveur",
-        ),
-        ConversationScenario(
-            language="fr",
-            title="À l'hôtel: Réserver une chambre",
-            context="Book a hotel room.",
-            level="A2",
-            roles="Client, Réceptionniste",
-        ),
-        ConversationScenario(
-            language="es",
-            title="En el restaurante: Pedir comida",
-            context="Order food at a restaurant.",
-            level="A1",
-            roles="Cliente, Camarero",
-        ),
-    ])
+    session.add_all(
+        [
+            ConversationScenario(
+                language="fr",
+                title="Au restaurant: Commander un repas",
+                context="You are at a restaurant. Order a meal.",
+                level="A2",
+                roles="Client, Serveur",
+            ),
+            ConversationScenario(
+                language="fr",
+                title="À l'hôtel: Réserver une chambre",
+                context="Book a hotel room.",
+                level="A2",
+                roles="Client, Réceptionniste",
+            ),
+            ConversationScenario(
+                language="es",
+                title="En el restaurante: Pedir comida",
+                context="Order food at a restaurant.",
+                level="A1",
+                roles="Cliente, Camarero",
+            ),
+        ]
+    )
     session.commit()
     session.close()
 

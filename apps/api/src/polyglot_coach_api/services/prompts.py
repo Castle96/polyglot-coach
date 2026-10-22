@@ -389,7 +389,9 @@ def _build_external_inputs_block(ctx: TutorContext, extra: dict[str, Any] | None
 
         if "curriculum_vocab" in extra and extra["curriculum_vocab"]:
             words = extra["curriculum_vocab"][:8]
-            lines.append(f"curriculum_state: available vocabulary — {', '.join(w['word'] for w in words)}")
+            lines.append(
+                f"curriculum_state: available vocabulary — {', '.join(w['word'] for w in words)}"
+            )
 
     if ctx.grammar_focus:
         lines.append(f"curriculum_state: grammar focus on {', '.join(ctx.grammar_focus)}")
@@ -409,7 +411,9 @@ def _build_mode_section(ctx: TutorContext) -> str:
     return f"Current active mode: {mode_label}"
 
 
-def build_tutor_prompt(ctx: TutorContext, history: list[dict], extra_context: dict[str, Any] | None = None) -> str:
+def build_tutor_prompt(
+    ctx: TutorContext, history: list[dict], extra_context: dict[str, Any] | None = None
+) -> str:
     history_text = "\n".join(
         f"{'Learner' if h.get('role') == 'user' else 'Tutor'}: {h.get('content', '')}"
         for h in history[-8:]

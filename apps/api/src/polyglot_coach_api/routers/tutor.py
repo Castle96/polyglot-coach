@@ -67,10 +67,14 @@ async def api_tutor_chat(body: ChatRequest):
         locale=locale,
         feature_focus=body.features,
     )
-    corrections = [
-        CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
-        for c in result.corrections
-    ] if result.corrections else None
+    corrections = (
+        [
+            CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
+            for c in result.corrections
+        ]
+        if result.corrections
+        else None
+    )
 
     return ChatResponse(
         reply=result.reply,
@@ -87,7 +91,10 @@ async def api_quick_chat(
     message: str = Query(..., description="User's message"),
     language: str = Query(..., description="Target language code (ISO 639-1)"),
     level: str | None = Query(None, description="Level within the target language's framework"),
-    mode: str = Query("conversation", description="Learning mode (conversation, lesson, grammar, vocabulary, roleplay, assessment, immersion)"),
+    mode: str = Query(
+        "conversation",
+        description="Learning mode (conversation, lesson, grammar, vocabulary, roleplay, assessment, immersion)",
+    ),
     locale: str | None = Query(None, description="Locale code (e.g. es_MX, fr_CA)"),
     features: str | None = Query(None, description="Comma-separated language feature ids"),
 ):
@@ -96,7 +103,9 @@ async def api_quick_chat(
     Uses GET with query params — no JSON body needed.
     Falls back to curriculum-based responses when LLM is unavailable.
     """
-    feature_focus = [item.strip() for item in features.split(",") if item.strip()] if features else None
+    feature_focus = (
+        [item.strip() for item in features.split(",") if item.strip()] if features else None
+    )
     pack, level, locale = resolve_language_request(
         language,
         level=level,
@@ -114,10 +123,14 @@ async def api_quick_chat(
             locale=locale,
             feature_focus=feature_focus,
         )
-        corrections = [
-            CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
-            for c in result.corrections
-        ] if result.corrections else None
+        corrections = (
+            [
+                CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
+                for c in result.corrections
+            ]
+            if result.corrections
+            else None
+        )
         return ChatResponse(
             reply=result.reply,
             corrections=corrections,
@@ -128,18 +141,27 @@ async def api_quick_chat(
         )
 
     session = get_session()
-    total = session.query(func.count(VocabularyEntry.id)).filter(
-        VocabularyEntry.language == language,
-    ).scalar()
+    total = (
+        session.query(func.count(VocabularyEntry.id))
+        .filter(
+            VocabularyEntry.language == language,
+        )
+        .scalar()
+    )
     reply = ""
     if total:
-        word = session.query(VocabularyEntry).filter(
-            VocabularyEntry.language == language,
-        ).order_by(func.random()).first()
+        word = (
+            session.query(VocabularyEntry)
+            .filter(
+                VocabularyEntry.language == language,
+            )
+            .order_by(func.random())
+            .first()
+        )
         reply = (
-            f"Let's practice {pack.get('name', language)}! Try using the word \"{word.word}\" "
+            f'Let\'s practice {pack.get("name", language)}! Try using the word "{word.word}" '
             f"(meaning: {word.translation}) in a sentence.\n\n"
-            f"Your message: \"{message}\"\n\n"
+            f'Your message: "{message}"\n\n'
             f"Keep practicing — every word counts!"
         )
     else:
@@ -147,7 +169,7 @@ async def api_quick_chat(
         reply = (
             f"I hear you! Unfortunately I don't have curriculum data loaded for {language} yet. "
             f"Try: {available}.\n\n"
-            f"You said: \"{message}\""
+            f'You said: "{message}"'
         )
     session.close()
 

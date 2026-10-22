@@ -18,12 +18,22 @@ class LearnerProfile(Base):
     locale = Column(String(10), nullable=False, default="neutral")
     proficiency_level = Column(String(5), nullable=False, default="A1")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     mistakes = relationship("MistakeRecord", back_populates="profile", cascade="all, delete-orphan")
-    progress = relationship("ProgressRecord", back_populates="profile", cascade="all, delete-orphan")
-    review_items = relationship("ReviewItem", back_populates="profile", cascade="all, delete-orphan")
-    vocabulary = relationship("VocabularyEntry", back_populates="profile", cascade="all, delete-orphan")
+    progress = relationship(
+        "ProgressRecord", back_populates="profile", cascade="all, delete-orphan"
+    )
+    review_items = relationship(
+        "ReviewItem", back_populates="profile", cascade="all, delete-orphan"
+    )
+    vocabulary = relationship(
+        "VocabularyEntry", back_populates="profile", cascade="all, delete-orphan"
+    )
     sessions = relationship("Session", back_populates="profile", cascade="all, delete-orphan")
 
 
@@ -133,6 +143,10 @@ class Session(Base):
     language = Column(String(10), nullable=False)
     state = Column(Text, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     profile = relationship("LearnerProfile", back_populates="sessions")

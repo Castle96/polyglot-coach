@@ -233,9 +233,7 @@ def resolve_selection(
             f"Valid locales: {', '.join(locales) or 'none'}."
         )
 
-    available_features = {
-        feature.get("id") for feature in features_for(code, resolved_level, root)
-    }
+    available_features = {feature.get("id") for feature in features_for(code, resolved_level, root)}
     requested = features or []
     invalid = [feature for feature in requested if feature not in available_features]
     if invalid:

@@ -20,8 +20,19 @@ from typing import Any
 
 from polyglot_coach_api.services.prompts import _MODE_ALIAS, TutorContext, build_tutor_prompt
 from polyglot_coach_shared.database import get_session
-from polyglot_coach_shared.languages import features_for, get_language, language_name, level_framework
-from polyglot_coach_shared.models import GrammarRule, LearnerProfile, MistakeRecord, ProgressRecord, VocabularyEntry
+from polyglot_coach_shared.languages import (
+    features_for,
+    get_language,
+    language_name,
+    level_framework,
+)
+from polyglot_coach_shared.models import (
+    GrammarRule,
+    LearnerProfile,
+    MistakeRecord,
+    ProgressRecord,
+    VocabularyEntry,
+)
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
@@ -96,9 +107,13 @@ def _enrich_from_profile(profile_id: int | None, ctx: TutorContext) -> dict[str,
         # Level and locale come from the validated session request. The profile
         # supplies defaults to the UI, but must not silently override selectors.
 
-        vocab_count = session.query(VocabularyEntry).filter(
-            VocabularyEntry.profile_id == profile_id,
-        ).count()
+        vocab_count = (
+            session.query(VocabularyEntry)
+            .filter(
+                VocabularyEntry.profile_id == profile_id,
+            )
+            .count()
+        )
         if vocab_count:
             extra["vocabulary_count"] = vocab_count
 
@@ -145,9 +160,7 @@ def _enrich_curriculum(language: str, level: str, extra: dict[str, Any]) -> None
             .all()
         )
         if rules:
-            extra["grammar_rules"] = [
-                {"title": r.title, "category": r.category} for r in rules
-            ]
+            extra["grammar_rules"] = [{"title": r.title, "category": r.category} for r in rules]
 
         vocab = (
             session.query(VocabularyEntry)
@@ -156,9 +169,7 @@ def _enrich_curriculum(language: str, level: str, extra: dict[str, Any]) -> None
             .all()
         )
         if vocab:
-            extra["curriculum_vocab"] = [
-                {"word": v.word, "tags": v.tags or ""} for v in vocab
-            ]
+            extra["curriculum_vocab"] = [{"word": v.word, "tags": v.tags or ""} for v in vocab]
 
         session.close()
     except Exception:
@@ -217,7 +228,9 @@ def _record_progress(
         pass
 
 
-def _schedule_vocab_review(profile_id: int | None, corrections: list[ParsedCorrection], language: str) -> None:
+def _schedule_vocab_review(
+    profile_id: int | None, corrections: list[ParsedCorrection], language: str
+) -> None:
     if not profile_id or not corrections:
         return
     try:
@@ -404,12 +417,14 @@ def _chat_ollama(
     system = build_tutor_prompt(ctx, history, extra)
     messages = _build_messages(system, history, message)
 
-    body = json.dumps({
-        "model": OLLAMA_MODEL,
-        "messages": messages,
-        "stream": False,
-        "options": {"temperature": 0.7, "num_predict": 512},
-    }).encode()
+    body = json.dumps(
+        {
+            "model": OLLAMA_MODEL,
+            "messages": messages,
+            "stream": False,
+            "options": {"temperature": 0.7, "num_predict": 512},
+        }
+    ).encode()
     req = urllib.request.Request(
         f"{OLLAMA_HOST}/api/chat",
         data=body,

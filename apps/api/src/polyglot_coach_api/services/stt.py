@@ -30,14 +30,16 @@ def load_stt_model():
     if not _HAS_WHISPER:
         return None
     if _whisper_model is None:
-        model_dir = os.environ.get("POLYGLOT_STT_MODEL_DIR", str(Path.home() / ".polyglot-coach" / "models" / "stt"))
-        _whisper_model = WhisperModel(MODEL_SIZE, download_root=model_dir, device="cpu", compute_type="int8")
+        model_dir = os.environ.get(
+            "POLYGLOT_STT_MODEL_DIR", str(Path.home() / ".polyglot-coach" / "models" / "stt")
+        )
+        _whisper_model = WhisperModel(
+            MODEL_SIZE, download_root=model_dir, device="cpu", compute_type="int8"
+        )
     return _whisper_model
 
 
-def transcribe(
-    audio_bytes: bytes, language: str | None = None, suffix: str = ".wav"
-) -> dict:
+def transcribe(audio_bytes: bytes, language: str | None = None, suffix: str = ".wav") -> dict:
     model = load_stt_model()
     if model is None:
         return {"text": "", "error": "faster-whisper not installed, run: uv sync --extra speech"}

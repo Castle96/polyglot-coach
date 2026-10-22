@@ -3,7 +3,6 @@
 import os
 
 import pytest
-
 from polyglot_coach_shared.database import _engine_cache
 
 os.environ["POLYGLOT_DB_PATH"] = ":memory:"

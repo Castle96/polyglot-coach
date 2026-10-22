@@ -19,9 +19,7 @@ from polyglot_coach_shared.languages import (
 
 router = APIRouter()
 
-PROJECT_ROOT = Path(
-    os.environ.get("POLYGLOT_PROJECT_ROOT", Path(__file__).resolve().parents[5])
-)
+PROJECT_ROOT = Path(os.environ.get("POLYGLOT_PROJECT_ROOT", Path(__file__).resolve().parents[5]))
 VOICE_MANIFEST = PROJECT_ROOT / "models" / "tts" / "voices.yaml"
 VOICE_DIR = os.environ.get(
     "POLYGLOT_TTS_VOICE_DIR", str(Path.home() / ".polyglot-coach" / "models" / "tts")

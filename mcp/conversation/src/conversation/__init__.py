@@ -41,7 +41,9 @@ def generate_scenario(language: str, level: str, topic: str | None = None) -> di
 
 def evaluate_response(scenario_id: int, user_turn: str) -> dict:
     session = get_session()
-    scenario = session.query(ConversationScenario).filter(ConversationScenario.id == scenario_id).first()
+    scenario = (
+        session.query(ConversationScenario).filter(ConversationScenario.id == scenario_id).first()
+    )
     return {
         "scenario_id": scenario_id,
         "scenario_title": scenario.title if scenario else None,
@@ -56,11 +58,15 @@ def evaluate_response(scenario_id: int, user_turn: str) -> dict:
 
 def suggest_followup(scenario_id: int, conversation_history: list[str]) -> dict:
     session = get_session()
-    scenario = session.query(ConversationScenario).filter(ConversationScenario.id == scenario_id).first()
+    scenario = (
+        session.query(ConversationScenario).filter(ConversationScenario.id == scenario_id).first()
+    )
     return {
         "scenario_id": scenario_id,
         "scenario_title": scenario.title if scenario else None,
         "conversation_history": conversation_history,
         "suggested_response": f"Continue the conversation about '{scenario.title if scenario else 'the topic'}'.",
-        "vocabulary_hints": scenario.vocabulary_hints.split(",") if scenario and scenario.vocabulary_hints else [],
+        "vocabulary_hints": scenario.vocabulary_hints.split(",")
+        if scenario and scenario.vocabulary_hints
+        else [],
     }

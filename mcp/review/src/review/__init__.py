@@ -53,7 +53,9 @@ def schedule_review(profile_id: int, word: str, language: str) -> dict:
             "language": existing.language,
             "interval": existing.interval,
             "status": "already_scheduled",
-            "next_review_at": existing.next_review_at.isoformat() if existing.next_review_at else None,
+            "next_review_at": existing.next_review_at.isoformat()
+            if existing.next_review_at
+            else None,
         }
     now = datetime.now(timezone.utc)
     item = ReviewItem(

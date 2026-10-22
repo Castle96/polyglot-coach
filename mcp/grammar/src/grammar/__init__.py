@@ -33,7 +33,11 @@ def explain_rule(language: str, category: str, level: str) -> list[dict]:
     session = get_session()
     rules = (
         session.query(GrammarRule)
-        .filter(GrammarRule.language == language, GrammarRule.category == category, GrammarRule.level == level)
+        .filter(
+            GrammarRule.language == language,
+            GrammarRule.category == category,
+            GrammarRule.level == level,
+        )
         .all()
     )
     return [

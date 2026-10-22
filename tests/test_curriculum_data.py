@@ -13,7 +13,11 @@ from polyglot_coach_shared.languages import (
     load_registry,
     ordered_levels,
 )
-from polyglot_coach_shared.models import ConversationScenario, GrammarRule, VocabularyEntry
+from polyglot_coach_shared.models import (
+    ConversationScenario,
+    GrammarRule,
+    VocabularyEntry,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CURRICULUM_ROOT = PROJECT_ROOT / "curriculum"
@@ -26,7 +30,11 @@ def test_registry_lists_only_shipped_languages():
     registry = load_registry(CURRICULUM_ROOT)
     assert registry["languages"] == ["es", "fr", "de"]
     assert registry["default_language"] == "es"
-    assert {pack["code"] for pack in list_languages(CURRICULUM_ROOT)} == {"es", "fr", "de"}
+    assert {pack["code"] for pack in list_languages(CURRICULUM_ROOT)} == {
+        "es",
+        "fr",
+        "de",
+    }
     assert get_language("ja", CURRICULUM_ROOT) is None
     assert language_name("es", CURRICULUM_ROOT) == "Spanish"
     assert language_name("xx", CURRICULUM_ROOT) == "xx"
@@ -91,9 +99,7 @@ def test_loader_seeds_real_curriculum_and_is_idempotent(tmp_path, monkeypatch):
 
     session = get_session()
     try:
-        languages = {
-            row[0] for row in session.query(VocabularyEntry.language).distinct().all()
-        }
+        languages = {row[0] for row in session.query(VocabularyEntry.language).distinct().all()}
         assert languages == {"es", "fr", "de"}
         counts = {
             "words": session.query(VocabularyEntry).count(),
