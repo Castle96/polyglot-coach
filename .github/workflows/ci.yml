@@ -22,5 +22,21 @@ jobs:
       - name: Validate curriculum
         run: uv run python tools/validate_curriculum.py --strict
 
+      - name: Lint
+        run: |
+          uv run ruff check apps mcp tests tools
+          uv run ruff format --check apps mcp tests tools
+
       - name: Run tests
         run: uv run pytest -q
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check web client
+        run: pnpm --filter @polyglot-coach/web lint
