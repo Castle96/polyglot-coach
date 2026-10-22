@@ -56,7 +56,7 @@ or Python entrypoint conventions as the implementation is added.
 - Add JavaScript or TypeScript tests alongside the relevant apps as packaged
   frontend code is introduced.
 - Run the full repository checks before opening a pull request:
-  `uv run python tools/validate_curriculum.py && uv run pytest && uv run ruff check apps mcp tests tools`.
+  `uv run python tools/validate_curriculum.py && uv run pytest && uv run ruff check apps mcp tests tools && uv run mypy apps mcp`.
 
 ## Adding a Language
 

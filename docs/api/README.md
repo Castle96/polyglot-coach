@@ -21,6 +21,11 @@ the MCP services, SQLite storage, and on-device model runtimes.
 - `/api/v1/speech` — local transcription and synthesis
 - `/api/v1/tutor` — chat, quick-chat, status, and options
 - `/health` — database, LLM, STT/TTS, and curriculum status
+- `/readyz` — readiness probe; 503 unless the database and registry are usable
+
+Health and readiness checks never download or provision models. The configured
+Ollama model is pulled by `./run.sh` (or explicitly with `ollama pull`) so probes
+cannot trigger a multi-gigabyte download.
 
 ## Language metadata
 
@@ -88,6 +93,9 @@ Transcription accepts wav, webm, ogg, mp3, m4a, and flac uploads. The language,
 level, and locale are validated against the language pack before the model is
 invoked. Synthesis resolves a locale-specific Piper voice when installed and
 falls back to the base language voice.
+
+Tutor chat limits messages to 4,000 characters and history to 20 entries;
+transcription rejects uploads larger than 15 MB.
 
 ```bash
 curl -F "audio=@sample.webm" \

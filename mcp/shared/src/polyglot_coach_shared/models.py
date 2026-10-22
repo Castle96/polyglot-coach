@@ -12,7 +12,7 @@ class LearnerProfile(Base):
     __tablename__ = "learner_profiles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, unique=True)
     native_language = Column(String(10), nullable=False)
     target_language = Column(String(10), nullable=False)
     locale = Column(String(10), nullable=False, default="neutral")

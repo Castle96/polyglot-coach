@@ -360,10 +360,11 @@ def _build_external_inputs_block(ctx: TutorContext, extra: dict[str, Any] | None
                 lines.append(f"language_feature_example: {example}")
 
     if ctx.feature_focus:
-        names = {
-            feature.get("id"): feature.get("name", feature.get("id"))
-            for feature in (ctx.language_features or [])
-        }
+        names: dict[str, str] = {}
+        for feature in ctx.language_features or []:
+            feature_id = feature.get("id")
+            if feature_id:
+                names[feature_id] = feature.get("name") or feature_id
         focus = ", ".join(names.get(feature_id, feature_id) for feature_id in ctx.feature_focus)
         lines.append(f"feature_focus: prioritize {focus} in this session")
 

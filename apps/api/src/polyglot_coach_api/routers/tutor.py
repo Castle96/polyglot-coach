@@ -1,27 +1,44 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
 
 from polyglot_coach_api.services.llm import TutorResult, generate_tutor_response, is_llm_available
 from polyglot_coach_api.validation import resolve_language_request
-from polyglot_coach_shared.database import get_session
+from polyglot_coach_shared.database import session_scope
 from polyglot_coach_shared.languages import features_for, list_public_languages, resolve_selection
 from polyglot_coach_shared.models import VocabularyEntry
 
 router = APIRouter()
 
+MAX_MESSAGE_LENGTH = 4000
+MAX_HISTORY_TURNS = 20
+
 
 class ChatRequest(BaseModel):
-    profile_id: int
-    message: str
-    language: str
-    level: str | None = None
-    mode: str = "conversation"
-    locale: str | None = None
-    features: list[str] | None = None
-    conversation_history: list[dict] | None = None
+    profile_id: int = Field(gt=0)
+    message: str = Field(min_length=1, max_length=MAX_MESSAGE_LENGTH)
+    language: str = Field(min_length=2, max_length=10)
+    level: str | None = Field(default=None, max_length=5)
+    mode: str = Field(default="conversation", max_length=32)
+    locale: str | None = Field(default=None, max_length=10)
+    features: list[str] | None = Field(default=None, max_length=20)
+    conversation_history: list[dict] | None = Field(default=None, max_length=MAX_HISTORY_TURNS)
+
+    @field_validator("conversation_history")
+    @classmethod
+    def _validate_history(cls, value: list[dict] | None) -> list[dict] | None:
+        for entry in value or []:
+            if not isinstance(entry, dict):
+                raise ValueError("conversation_history entries must be objects")
+            content = entry.get("content", "")
+            if not isinstance(content, str) or len(content) > MAX_MESSAGE_LENGTH:
+                raise ValueError(
+                    "conversation_history entries need string content up to "
+                    f"{MAX_MESSAGE_LENGTH} characters"
+                )
+        return value
 
 
 class CorrectionItem(BaseModel):
@@ -47,7 +64,7 @@ def _feature_names(language: str, level: str, feature_ids: list[str] | None) -> 
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def api_tutor_chat(body: ChatRequest):
+def api_tutor_chat(body: ChatRequest):
     _, level, locale = resolve_language_request(
         body.language,
         level=body.level,
@@ -87,16 +104,25 @@ async def api_tutor_chat(body: ChatRequest):
 
 
 @router.get("/quick-chat", response_model=ChatResponse)
-async def api_quick_chat(
-    message: str = Query(..., description="User's message"),
-    language: str = Query(..., description="Target language code (ISO 639-1)"),
-    level: str | None = Query(None, description="Level within the target language's framework"),
+def api_quick_chat(
+    message: str = Query(
+        ..., min_length=1, max_length=MAX_MESSAGE_LENGTH, description="User's message"
+    ),
+    language: str = Query(
+        ..., min_length=2, max_length=10, description="Target language code (ISO 639-1)"
+    ),
+    level: str | None = Query(
+        None, max_length=5, description="Level within the target language's framework"
+    ),
     mode: str = Query(
         "conversation",
+        max_length=32,
         description="Learning mode (conversation, lesson, grammar, vocabulary, roleplay, assessment, immersion)",
     ),
-    locale: str | None = Query(None, description="Locale code (e.g. es_MX, fr_CA)"),
-    features: str | None = Query(None, description="Comma-separated language feature ids"),
+    locale: str | None = Query(None, max_length=10, description="Locale code (e.g. es_MX, fr_CA)"),
+    features: str | None = Query(
+        None, max_length=200, description="Comma-separated language feature ids"
+    ),
 ):
     """Lightweight chat endpoint for constrained devices (ESP32-C3 etc).
 
@@ -140,38 +166,37 @@ async def api_quick_chat(
             features=feature_focus,
         )
 
-    session = get_session()
-    total = (
-        session.query(func.count(VocabularyEntry.id))
-        .filter(
-            VocabularyEntry.language == language,
-        )
-        .scalar()
-    )
     reply = ""
-    if total:
-        word = (
-            session.query(VocabularyEntry)
+    with session_scope() as session:
+        total = (
+            session.query(func.count(VocabularyEntry.id))
             .filter(
                 VocabularyEntry.language == language,
             )
-            .order_by(func.random())
-            .first()
+            .scalar()
         )
-        reply = (
-            f'Let\'s practice {pack.get("name", language)}! Try using the word "{word.word}" '
-            f"(meaning: {word.translation}) in a sentence.\n\n"
-            f'Your message: "{message}"\n\n'
-            f"Keep practicing — every word counts!"
-        )
-    else:
-        available = ", ".join(item["code"] for item in list_public_languages())
-        reply = (
-            f"I hear you! Unfortunately I don't have curriculum data loaded for {language} yet. "
-            f"Try: {available}.\n\n"
-            f'You said: "{message}"'
-        )
-    session.close()
+        if total:
+            word = (
+                session.query(VocabularyEntry)
+                .filter(
+                    VocabularyEntry.language == language,
+                )
+                .order_by(func.random())
+                .first()
+            )
+            reply = (
+                f'Let\'s practice {pack.get("name", language)}! Try using the word "{word.word}" '
+                f"(meaning: {word.translation}) in a sentence.\n\n"
+                f'Your message: "{message}"\n\n'
+                f"Keep practicing — every word counts!"
+            )
+        else:
+            available = ", ".join(item["code"] for item in list_public_languages())
+            reply = (
+                f"I hear you! Unfortunately I don't have curriculum data loaded for "
+                f"{language} yet. Try: {available}.\n\n"
+                f'You said: "{message}"'
+            )
 
     focus_names = _feature_names(language, level, feature_focus)
     if focus_names:

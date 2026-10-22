@@ -17,6 +17,7 @@
     "lint:python": "uv run ruff check apps mcp tests tools",
     "format:python": "uv run ruff format apps mcp tests tools",
     "format:python:check": "uv run ruff format --check apps mcp tests tools",
+    "typecheck": "uv run mypy apps mcp",
     "test": "uv run pytest",
     "validate": "uv run python tools/validate_curriculum.py --strict"
   },
