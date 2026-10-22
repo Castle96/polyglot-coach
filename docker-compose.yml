@@ -20,3 +20,9 @@ services:
       OLLAMA_HOST: http://host.docker.internal:11434
       POLYGLOT_CURRICULUM_PATH: /app/curriculum
       POLYGLOT_DB_PATH: /app/storage/polyglot.db
+      # Optional: set POLYGLOT_OPENAI_API_KEY in the host environment to use an
+      # OpenAI-compatible provider instead of Ollama.
+      POLYGLOT_LLM_PROVIDER: ${POLYGLOT_LLM_PROVIDER:-auto}
+      POLYGLOT_OPENAI_API_KEY: ${POLYGLOT_OPENAI_API_KEY:-}
+      POLYGLOT_OPENAI_BASE_URL: ${POLYGLOT_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      POLYGLOT_OPENAI_MODEL: ${POLYGLOT_OPENAI_MODEL:-gpt-4o-mini}

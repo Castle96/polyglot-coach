@@ -1,10 +1,18 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
 
-from polyglot_coach_api.services.llm import TutorResult, generate_tutor_response, is_llm_available
+from polyglot_coach_api.services.llm import (
+    LLMOverrides,
+    LLMProviderError,
+    TutorResult,
+    build_overrides,
+    generate_tutor_response,
+    is_llm_available,
+    provider_info,
+)
 from polyglot_coach_api.validation import resolve_language_request
 from polyglot_coach_shared.database import session_scope
 from polyglot_coach_shared.languages import features_for, list_public_languages, resolve_selection
@@ -14,6 +22,22 @@ router = APIRouter()
 
 MAX_MESSAGE_LENGTH = 4000
 MAX_HISTORY_TURNS = 20
+
+
+def llm_overrides(
+    x_polyglot_llm_api_key: str | None = Header(default=None, alias="X-Polyglot-LLM-API-Key"),
+    x_polyglot_llm_base_url: str | None = Header(default=None, alias="X-Polyglot-LLM-Base-URL"),
+    x_polyglot_llm_model: str | None = Header(default=None, alias="X-Polyglot-LLM-Model"),
+) -> LLMOverrides | None:
+    """Read optional bring-your-own-key provider headers."""
+    try:
+        return build_overrides(
+            api_key=x_polyglot_llm_api_key,
+            base_url=x_polyglot_llm_base_url,
+            model=x_polyglot_llm_model,
+        )
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 class ChatRequest(BaseModel):
@@ -64,26 +88,30 @@ def _feature_names(language: str, level: str, feature_ids: list[str] | None) -> 
 
 
 @router.post("/chat", response_model=ChatResponse)
-def api_tutor_chat(body: ChatRequest):
+def api_tutor_chat(body: ChatRequest, overrides: LLMOverrides | None = Depends(llm_overrides)):
     _, level, locale = resolve_language_request(
         body.language,
         level=body.level,
         locale=body.locale,
         features=body.features,
     )
-    if not is_llm_available():
-        raise HTTPException(503, "LLM model not loaded. Set POLYGLOT_LLM_MODEL_PATH and restart.")
+    if not is_llm_available() and not (overrides and overrides.enabled):
+        raise HTTPException(503, "LLM model not loaded. Configure a provider or a local model.")
 
-    result: TutorResult = generate_tutor_response(
-        message=body.message,
-        language=body.language,
-        level=level,
-        history=body.conversation_history or [],
-        profile_id=body.profile_id,
-        mode=body.mode,
-        locale=locale,
-        feature_focus=body.features,
-    )
+    try:
+        result: TutorResult = generate_tutor_response(
+            message=body.message,
+            language=body.language,
+            level=level,
+            history=body.conversation_history or [],
+            profile_id=body.profile_id,
+            mode=body.mode,
+            locale=locale,
+            feature_focus=body.features,
+            overrides=overrides,
+        )
+    except LLMProviderError as exc:
+        raise HTTPException(502, str(exc)) from exc
     corrections = (
         [
             CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
@@ -123,6 +151,7 @@ def api_quick_chat(
     features: str | None = Query(
         None, max_length=200, description="Comma-separated language feature ids"
     ),
+    overrides: LLMOverrides | None = Depends(llm_overrides),
 ):
     """Lightweight chat endpoint for constrained devices (ESP32-C3 etc).
 
@@ -139,16 +168,20 @@ def api_quick_chat(
         features=feature_focus,
     )
 
-    if is_llm_available():
-        result: TutorResult = generate_tutor_response(
-            message=message,
-            language=language,
-            level=level,
-            history=[],
-            mode=mode,
-            locale=locale,
-            feature_focus=feature_focus,
-        )
+    if is_llm_available() or (overrides and overrides.enabled):
+        try:
+            result: TutorResult = generate_tutor_response(
+                message=message,
+                language=language,
+                level=level,
+                history=[],
+                mode=mode,
+                locale=locale,
+                feature_focus=feature_focus,
+                overrides=overrides,
+            )
+        except LLMProviderError as exc:
+            raise HTTPException(502, str(exc)) from exc
         corrections = (
             [
                 CorrectionItem(correction=c.correction, why=c.why, alternative=c.alternative)
@@ -213,7 +246,14 @@ def api_quick_chat(
 
 @router.get("/status")
 def api_tutor_status():
-    return {"llm_available": is_llm_available()}
+    info = provider_info()
+    return {
+        "llm_available": info["provider"] is not None,
+        "provider": info["provider"],
+        "model": info["model"],
+        "base_url": info["base_url"],
+        "byok_supported": True,
+    }
 
 
 @router.get("/options")

@@ -423,6 +423,35 @@
     </div>
 
     <div>
+      <h2>Model Provider</h2>
+      <div class="field">
+        <label for="providerSelect">Provider</label>
+        <select id="providerSelect">
+          <option value="server">Server default</option>
+          <option value="openai">OpenAI-compatible (own key)</option>
+        </select>
+      </div>
+      <div id="byokFields" hidden>
+        <div class="field">
+          <label for="llmBaseUrl">Base URL</label>
+          <input type="url" id="llmBaseUrl" placeholder="https://api.openai.com/v1">
+        </div>
+        <div class="field">
+          <label for="llmModel">Model</label>
+          <input type="text" id="llmModel" placeholder="gpt-4o-mini">
+        </div>
+        <div class="field">
+          <label for="llmApiKey">API key</label>
+          <input type="password" id="llmApiKey" placeholder="sk-..." autocomplete="off" spellcheck="false">
+        </div>
+        <button class="btn-secondary" id="llmSaveBtn" style="width:100%">Use provider</button>
+        <div class="feature-hint" style="margin-top:6px">
+          Kept in this tab only. Requests go through your local API server.
+        </div>
+      </div>
+    </div>
+
+    <div>
       <h2>Advanced Focus</h2>
       <div class="feature-hint" style="margin-bottom:6px">Pick language-specific features to prioritize in this session.</div>
       <div class="feature-list" id="featureList">
@@ -461,6 +490,15 @@ const featureList = document.getElementById('featureList');
 const languageMeta = document.getElementById('languageMeta');
 const micBtn = document.getElementById('micBtn');
 const speakReplies = document.getElementById('speakReplies');
+const providerSelect = document.getElementById('providerSelect');
+const byokFields = document.getElementById('byokFields');
+const llmBaseUrl = document.getElementById('llmBaseUrl');
+const llmModel = document.getElementById('llmModel');
+const llmApiKey = document.getElementById('llmApiKey');
+const llmSaveBtn = document.getElementById('llmSaveBtn');
+
+const DEFAULT_LLM_BASE_URL = 'https://api.openai.com/v1';
+const DEFAULT_LLM_MODEL = 'gpt-4o-mini';
 
 let sttAvailable = false;
 let ttsAvailable = false;
@@ -819,7 +857,7 @@ async function sendMessage() {
     const settings = getSettings();
     const res = await fetch(`${API}/api/v1/tutor/chat`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json', ...llmHeaders()},
       body: JSON.stringify({
         profile_id: profileId || 1,
         message: text,
@@ -835,7 +873,7 @@ async function sendMessage() {
     removeLoading(loadingId);
 
     if (!res.ok) {
-      addMessage(`Error: ${await responseDetail(res)}`, 'tutor');
+      addMessage(`Error: ${escapeHtml(await responseDetail(res))}`, 'tutor');
       return;
     }
 
@@ -902,23 +940,72 @@ function getSettings() {
   };
 }
 
+// Model provider (bring your own OpenAI-compatible key)
+function initProviderSettings() {
+  providerSelect.value = localStorage.getItem('pc_llm_provider') || 'server';
+  llmBaseUrl.value = localStorage.getItem('pc_llm_base_url') || DEFAULT_LLM_BASE_URL;
+  llmModel.value = localStorage.getItem('pc_llm_model') || DEFAULT_LLM_MODEL;
+  llmApiKey.value = sessionStorage.getItem('pc_llm_api_key') || '';
+  toggleByok();
+}
+
+function toggleByok() {
+  byokFields.hidden = providerSelect.value !== 'openai';
+}
+
+function hasByok() {
+  return providerSelect.value === 'openai' && Boolean(sessionStorage.getItem('pc_llm_api_key'));
+}
+
+function llmHeaders() {
+  if (!hasByok()) return {};
+  return {
+    'X-Polyglot-LLM-API-Key': sessionStorage.getItem('pc_llm_api_key'),
+    'X-Polyglot-LLM-Base-URL': localStorage.getItem('pc_llm_base_url') || DEFAULT_LLM_BASE_URL,
+    'X-Polyglot-LLM-Model': localStorage.getItem('pc_llm_model') || DEFAULT_LLM_MODEL,
+  };
+}
+
+function saveProvider() {
+  const key = llmApiKey.value.trim();
+  if (providerSelect.value === 'openai' && !key) {
+    showToast('Enter an API key to use your own provider.');
+    return;
+  }
+  localStorage.setItem('pc_llm_provider', providerSelect.value);
+  localStorage.setItem('pc_llm_base_url', llmBaseUrl.value.trim() || DEFAULT_LLM_BASE_URL);
+  localStorage.setItem('pc_llm_model', llmModel.value.trim() || DEFAULT_LLM_MODEL);
+  if (key) sessionStorage.setItem('pc_llm_api_key', key);
+  else sessionStorage.removeItem('pc_llm_api_key');
+  showToast('Model provider updated.');
+  checkHealth();
+}
+
+providerSelect.addEventListener('change', toggleByok);
+llmSaveBtn.addEventListener('click', saveProvider);
+
 // Health check
 async function checkHealth() {
   try {
     const res = await fetch(`${API}/health`);
     const data = await res.json();
-    const llmOk = data.llm_available;
+    const serverLlm = Boolean(data.llm_available);
+    const byokReady = hasByok();
+    const llmOk = serverLlm || byokReady;
     sttAvailable = Boolean(data.stt_available);
     ttsAvailable = Boolean(data.tts_available);
     micBtn.disabled = !sttAvailable || sttBusy;
     micBtn.title = sttAvailable ? 'Push to talk' : 'Speech-to-text is not installed';
     speakReplies.disabled = !ttsAvailable;
     statusDot.className = 'status-dot ' + (llmOk ? 'online' : 'offline');
-    statusLabel.textContent = llmOk ? 'LLM ready' : 'LLM unavailable';
+    statusLabel.textContent = byokReady
+      ? 'BYOK provider'
+      : (serverLlm ? 'LLM ready' : 'LLM unavailable');
     statusLabel.style.color = llmOk ? 'var(--green)' : 'var(--red)';
+    const providerLabel = data.llm_provider ? ` (${data.llm_provider})` : '';
     document.getElementById('sidebarStatus').innerHTML =
       `<span class="${data.db_connected ? 'good' : 'bad'}">DB: ${data.db_connected ? 'connected' : 'disconnected'}</span>` +
-      ` &middot; <span class="${llmOk ? 'good' : 'bad'}">LLM: ${llmOk ? 'ready' : 'offline'}</span>` +
+      ` &middot; <span class="${llmOk ? 'good' : 'bad'}">LLM: ${byokReady ? 'BYOK' : (serverLlm ? 'ready' + escapeHtml(providerLabel) : 'offline')}</span>` +
       ` &middot; <span class="${sttAvailable ? 'good' : 'bad'}">STT: ${sttAvailable ? 'ready' : 'off'}</span>` +
       ` &middot; <span class="${ttsAvailable ? 'good' : 'bad'}">TTS: ${ttsAvailable ? 'ready' : 'off'}</span>` +
       (data.curriculum_loaded ? '' : ' &middot; <span class="bad">No curriculum</span>');
@@ -963,6 +1050,7 @@ async function restoreProfile() {
 }
 
 async function init() {
+  initProviderSettings();
   await loadLanguages();
   await restoreProfile();
   checkHealth();
