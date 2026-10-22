@@ -235,6 +235,7 @@ uv run python tools/validate_curriculum.py --strict
 uv run pytest
 uv run ruff check apps mcp tests tools
 uv run ruff format --check apps mcp tests tools
+uv run mypy apps mcp
 ```
 
 The static web client has its own check (element ids, selectors, fetch routes,
@@ -245,7 +246,8 @@ pnpm --filter @polyglot-coach/web lint
 ```
 
 The same commands are available as root scripts: `npm test`, `npm run lint:python`,
-`npm run format:python:check`, `npm run validate`, and `npm run lint`.
+`npm run format:python:check`, `npm run typecheck`, `npm run validate`, and
+`npm run lint`.
 
 ## Language Packs
 

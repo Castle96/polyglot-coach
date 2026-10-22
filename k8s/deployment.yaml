@@ -32,10 +32,33 @@ spec:
               value: http://ollama-svc.esp32-dev.svc:11434
             - name: PYTHONPATH
               value: /app
+            - name: POLYGLOT_LOG_LEVEL
+              value: INFO
             - name: POLYGLOT_CURRICULUM_PATH
               value: /app/curriculum
             - name: POLYGLOT_DB_PATH
               value: /app/storage/polyglot.db
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
           volumeMounts:
             - name: storage
               mountPath: /app/storage
