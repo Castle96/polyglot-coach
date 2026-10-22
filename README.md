@@ -135,8 +135,8 @@ Mode aliases are normalised in `services/prompts.py` (`tutor` → conversation,
 polyglot-coach/
 ├── apps/
 │   ├── api/                 # FastAPI service, loader, LLM/STT/TTS modules
-│   ├── desktop/             # Placeholder
-│   └── web/                 # Single-page chat client
+│   ├── desktop/             # Planned Tauri shell (workspace stub only)
+│   └── web/                 # Single-page chat client + static checks
 ├── curriculum/
 │   ├── registry.yaml        # Enabled languages and level frameworks
 │   ├── common/
@@ -177,8 +177,8 @@ name-based directories (`curriculum/spanish`, `curriculum/french`,
 - Python 3.12+
 - [uv](https://github.com/astral-sh/uv)
 - [Ollama](https://ollama.ai) or a local GGUF model
-- Node 20+ and [pnpm](https://pnpm.io/) only when working on future packaged
-  frontend code; the bundled web client is static and needs no Node build
+- Node 20+ and [pnpm](https://pnpm.io/) only to run the workspace lint scripts;
+  the bundled web client is static and needs no Node build
 
 ### Clone and install
 
@@ -233,7 +233,19 @@ uv run python tools/validate_curriculum.py --strict
 
 ```bash
 uv run pytest
+uv run ruff check apps mcp tests tools
+uv run ruff format --check apps mcp tests tools
 ```
+
+The static web client has its own check (element ids, selectors, fetch routes,
+and balanced tags in `apps/web/index.html`):
+
+```bash
+pnpm --filter @polyglot-coach/web lint
+```
+
+The same commands are available as root scripts: `npm test`, `npm run lint:python`,
+`npm run format:python:check`, `npm run validate`, and `npm run lint`.
 
 ## Language Packs
 

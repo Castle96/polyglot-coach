@@ -7,8 +7,8 @@ This project focuses on local-first, offline-capable language learning powered b
 
 - Python 3.12+
 - [uv](https://github.com/astral-sh/uv)
-- Node 20+ and [pnpm](https://pnpm.io/) only when working on packaged frontend
-  code; the current web client is static and served by FastAPI
+- Node 20+ and [pnpm](https://pnpm.io/) only for the workspace lint scripts; the
+  bundled web client is static and served by FastAPI
 
 ## Setup
 
@@ -18,9 +18,10 @@ cd polyglot-coach
 uv sync
 ```
 
-`pnpm install` is not required for the current static web client. The workspace
-scripts will become relevant once `apps/web` and `apps/desktop` contain their
-own `package.json` files.
+The web client needs no build step, so `pnpm install` is optional. Both
+`apps/web` and `apps/desktop` declare workspace packages: `apps/web` provides a
+static lint check for its `index.html`, and `apps/desktop` is a stub that
+reports the desktop app is not implemented yet.
 
 ## Project Structure Overview
 
@@ -50,10 +51,12 @@ or Python entrypoint conventions as the implementation is added.
 
 - Use `pytest` for Python MCP services.
 - Validate curriculum changes with `uv run python tools/validate_curriculum.py`.
+- Run the static web check after editing `apps/web/index.html`:
+  `pnpm --filter @polyglot-coach/web lint`.
 - Add JavaScript or TypeScript tests alongside the relevant apps as packaged
   frontend code is introduced.
 - Run the full repository checks before opening a pull request:
-  `uv run python tools/validate_curriculum.py && uv run pytest`.
+  `uv run python tools/validate_curriculum.py && uv run pytest && uv run ruff check apps mcp tests tools`.
 
 ## Adding a Language
 

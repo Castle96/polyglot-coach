@@ -8,12 +8,17 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev:web": "pnpm --filter web dev",
-    "dev:desktop": "pnpm --filter desktop dev",
-    "build:web": "pnpm --filter web build",
-    "build:desktop": "pnpm --filter desktop build",
+    "dev:web": "pnpm --filter @polyglot-coach/web dev",
+    "dev:desktop": "pnpm --filter @polyglot-coach/desktop dev",
+    "build:web": "pnpm --filter @polyglot-coach/web build",
+    "build:desktop": "pnpm --filter @polyglot-coach/desktop build",
     "lint": "pnpm -r lint",
-    "format": "pnpm -r format"
+    "format": "pnpm -r format",
+    "lint:python": "uv run ruff check apps mcp tests tools",
+    "format:python": "uv run ruff format apps mcp tests tools",
+    "format:python:check": "uv run ruff format --check apps mcp tests tools",
+    "test": "uv run pytest",
+    "validate": "uv run python tools/validate_curriculum.py --strict"
   },
   "devDependencies": {
     "typescript": "^5.4.0"

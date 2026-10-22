@@ -1,0 +1,12 @@
+{
+  "name": "@polyglot-coach/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Planned Tauri desktop shell for Polyglot Coach",
+  "scripts": {
+    "lint": "echo \"No desktop sources yet; nothing to lint.\" && exit 0",
+    "format": "echo \"No desktop sources yet; nothing to format.\" && exit 0",
+    "dev": "echo \"The desktop app is not implemented yet. See apps/desktop/README.md.\" && exit 0",
+    "build": "echo \"The desktop app is not implemented yet. See apps/desktop/README.md.\" && exit 0"
+  }
+}

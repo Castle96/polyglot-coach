@@ -1,0 +1,13 @@
+{
+  "name": "@polyglot-coach/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static single-page chat client served by the Polyglot Coach API",
+  "scripts": {
+    "lint": "node scripts/check.mjs",
+    "format": "node scripts/check.mjs --write",
+    "dev": "echo \"The web client is static and served by the API. Run ./run.sh from the repository root.\" && exit 0",
+    "build": "echo \"No build step: the client is a static index.html served by the API.\" && exit 0"
+  },
+  "devDependencies": {}
+}
