@@ -15,16 +15,30 @@ from polyglot_coach_shared.models import MistakeRecord, ProgressRecord, ReviewIt
 
 def get_learning_summary(profile_id: int) -> dict:
     session = get_session()
-    vocab_count = session.query(func.count(VocabularyEntry.id)).filter(VocabularyEntry.profile_id == profile_id).scalar()
-    mistake_count = session.query(func.count(MistakeRecord.id)).filter(MistakeRecord.profile_id == profile_id).scalar()
+    vocab_count = (
+        session.query(func.count(VocabularyEntry.id))
+        .filter(VocabularyEntry.profile_id == profile_id)
+        .scalar()
+    )
+    mistake_count = (
+        session.query(func.count(MistakeRecord.id))
+        .filter(MistakeRecord.profile_id == profile_id)
+        .scalar()
+    )
     review_due = (
         session.query(func.count(ReviewItem.id))
-        .filter(ReviewItem.profile_id == profile_id, ReviewItem.next_review_at <= datetime.now(timezone.utc))
+        .filter(
+            ReviewItem.profile_id == profile_id,
+            ReviewItem.next_review_at <= datetime.now(timezone.utc),
+        )
         .scalar()
     )
     recent_progress = (
         session.query(ProgressRecord)
-        .filter(ProgressRecord.profile_id == profile_id, ProgressRecord.created_at >= datetime.now(timezone.utc) - timedelta(days=7))
+        .filter(
+            ProgressRecord.profile_id == profile_id,
+            ProgressRecord.created_at >= datetime.now(timezone.utc) - timedelta(days=7),
+        )
         .count()
     )
     return {

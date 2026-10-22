@@ -2,7 +2,6 @@
 
 import pytest
 from fastapi import HTTPException
-
 from polyglot_coach_shared.languages import (
     features_for,
     get_feature,
@@ -100,7 +99,10 @@ def test_meta_router_lists_languages():
 
 
 def test_meta_router_language_and_features():
-    from polyglot_coach_api.routers.meta import api_get_language, api_get_language_features
+    from polyglot_coach_api.routers.meta import (
+        api_get_language,
+        api_get_language_features,
+    )
 
     language = api_get_language("de")
     assert language["name"] == "German"

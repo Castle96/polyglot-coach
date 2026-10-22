@@ -6,11 +6,34 @@ from polyglot_coach_shared.models import VocabularyEntry
 
 def _seed_vocabulary():
     session = get_session(":memory:")
-    session.add_all([
-        VocabularyEntry(profile_id=0, word="bonjour", translation="hello", language="fr", context_sentence="Bonjour, comment ça va?", tags="greeting"),
-        VocabularyEntry(profile_id=0, word="merci", translation="thank you", language="fr", context_sentence="Merci beaucoup!", tags="courtesy"),
-        VocabularyEntry(profile_id=0, word="hola", translation="hello", language="es", context_sentence="Hola, ¿cómo estás?", tags="greeting"),
-    ])
+    session.add_all(
+        [
+            VocabularyEntry(
+                profile_id=0,
+                word="bonjour",
+                translation="hello",
+                language="fr",
+                context_sentence="Bonjour, comment ça va?",
+                tags="greeting",
+            ),
+            VocabularyEntry(
+                profile_id=0,
+                word="merci",
+                translation="thank you",
+                language="fr",
+                context_sentence="Merci beaucoup!",
+                tags="courtesy",
+            ),
+            VocabularyEntry(
+                profile_id=0,
+                word="hola",
+                translation="hello",
+                language="es",
+                context_sentence="Hola, ¿cómo estás?",
+                tags="greeting",
+            ),
+        ]
+    )
     session.commit()
     session.close()
 

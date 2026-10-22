@@ -5,8 +5,9 @@ Static single-page chat client (`index.html`) served by the FastAPI app.
 Current limitations:
 
 - UI strings are English-only
-- No build step or `package.json`; the workspace scripts in the repository
-  root are placeholders until the frontend is packaged
+- No build step; the package exists for workspace tooling and a static lint
+  check (`pnpm --filter @polyglot-coach/web lint`), which verifies that element
+  ids, selectors, fetch routes, and structural tags in `index.html` resolve
 
 Language, level, locale, and advanced-feature controls are populated from
 `/api/v1/meta/languages`. The sidebar sends selected features with each tutor

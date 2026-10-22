@@ -57,7 +57,9 @@ def get_topic(language: str, level: str | None = None) -> dict:
 
 def get_scenario(scenario_id: int) -> dict | None:
     session = get_session()
-    scenario = session.query(ConversationScenario).filter(ConversationScenario.id == scenario_id).first()
+    scenario = (
+        session.query(ConversationScenario).filter(ConversationScenario.id == scenario_id).first()
+    )
     if scenario is None:
         return None
     return {

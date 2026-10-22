@@ -22,7 +22,10 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "word": {"type": "string", "description": "The word to look up"},
                     "language": {"type": "string", "description": "Language code"},
-                    "profile_id": {"type": "integer", "description": "Optional profile ID for personalized results"},
+                    "profile_id": {
+                        "type": "integer",
+                        "description": "Optional profile ID for personalized results",
+                    },
                 },
                 "required": ["word", "language"],
             },

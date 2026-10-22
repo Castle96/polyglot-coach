@@ -26,7 +26,10 @@ DEFAULT_VOICE_DIR = Path.home() / ".polyglot-coach" / "models" / "tts"
 def _download(url: str, destination: Path) -> None:
     tmp = destination.with_suffix(destination.suffix + ".part")
     try:
-        with urllib.request.urlopen(url, timeout=120) as response, open(tmp, "wb") as out:
+        with (
+            urllib.request.urlopen(url, timeout=120) as response,
+            open(tmp, "wb") as out,
+        ):
             shutil.copyfileobj(response, out)
         tmp.replace(destination)
     except Exception:

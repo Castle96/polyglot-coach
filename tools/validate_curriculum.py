@@ -101,9 +101,14 @@ def validate_curriculum(root: str | Path = DEFAULT_ROOT) -> ValidationReport:
     if registry.get("version") != 1:
         report.error(f"{registry_path}: version must be 1")
 
-    frameworks = _require_mapping(
-        registry.get("level_frameworks", {}), f"{registry_path}: level_frameworks", report
-    ) or {}
+    frameworks = (
+        _require_mapping(
+            registry.get("level_frameworks", {}),
+            f"{registry_path}: level_frameworks",
+            report,
+        )
+        or {}
+    )
     framework_levels: dict[str, list[str]] = {}
     for name, framework in frameworks.items():
         data = _require_mapping(framework, f"{registry_path}: framework {name}", report)
@@ -118,9 +123,9 @@ def validate_curriculum(root: str | Path = DEFAULT_ROOT) -> ValidationReport:
             report.error(f"{registry_path}: framework {name} contains duplicate levels")
         framework_levels[name] = levels
 
-    active_codes = _require_strings(
-        registry.get("languages"), f"{registry_path}: languages", report
-    ) or []
+    active_codes = (
+        _require_strings(registry.get("languages"), f"{registry_path}: languages", report) or []
+    )
     if not active_codes:
         report.error(f"{registry_path}: no languages are enabled")
     if len(set(active_codes)) != len(active_codes):
@@ -171,12 +176,12 @@ def validate_curriculum(root: str | Path = DEFAULT_ROOT) -> ValidationReport:
                 report.error(f"{pack_path}: language pack is not listed in registry languages")
         elif not pack_path.exists():
             level_dirs = [
-                entry for entry in child.iterdir() if entry.is_dir() and LEVEL_DIR_RE.match(entry.name)
+                entry
+                for entry in child.iterdir()
+                if entry.is_dir() and LEVEL_DIR_RE.match(entry.name)
             ]
             if level_dirs:
-                report.error(
-                    f"{child}: level content exists but no language.yaml is present"
-                )
+                report.error(f"{child}: level content exists but no language.yaml is present")
 
     seen_codes: set[str] = set()
     seen_rule_ids: set[str] = set()
@@ -400,9 +405,10 @@ def _validate_level(
     vocabulary_path = level_dir / "vocabulary.yaml"
     if vocabulary_path.exists():
         counts["files"] += 1
-        data = _require_mapping(
-            _load_yaml(vocabulary_path, report), str(vocabulary_path), report
-        ) or {}
+        data = (
+            _require_mapping(_load_yaml(vocabulary_path, report), str(vocabulary_path), report)
+            or {}
+        )
         words = _require_list(data.get("words", []), f"{vocabulary_path}: words", report) or []
         counts["words"] = len(words)
         for index, item in enumerate(words):
@@ -423,12 +429,12 @@ def _validate_level(
     scenarios_path = level_dir / "scenarios.yaml"
     if scenarios_path.exists():
         counts["files"] += 1
-        data = _require_mapping(
-            _load_yaml(scenarios_path, report), str(scenarios_path), report
-        ) or {}
-        scenarios = _require_list(
-            data.get("scenarios", []), f"{scenarios_path}: scenarios", report
-        ) or []
+        data = (
+            _require_mapping(_load_yaml(scenarios_path, report), str(scenarios_path), report) or {}
+        )
+        scenarios = (
+            _require_list(data.get("scenarios", []), f"{scenarios_path}: scenarios", report) or []
+        )
         counts["scenarios"] = len(scenarios)
         for index, item in enumerate(scenarios):
             label = f"{scenarios_path}: scenarios[{index}]"
@@ -452,9 +458,14 @@ def _validate_level(
     if locale_path.exists():
         counts["files"] += 1
         data = _require_mapping(_load_yaml(locale_path, report), str(locale_path), report) or {}
-        overrides = _require_list(
-            data.get("locale_overrides", []), f"{locale_path}: locale_overrides", report
-        ) or []
+        overrides = (
+            _require_list(
+                data.get("locale_overrides", []),
+                f"{locale_path}: locale_overrides",
+                report,
+            )
+            or []
+        )
         counts["locale_overrides"] = len(overrides)
         for index, item in enumerate(overrides):
             label = f"{locale_path}: locale_overrides[{index}]"
@@ -469,9 +480,9 @@ def _validate_level(
                 report.error(f"{label}: locale {locale!r} is not declared in language.yaml")
         pronunciation = data.get("pronunciation_profiles")
         if pronunciation is not None:
-            profiles = _require_list(
-                pronunciation, f"{locale_path}: pronunciation_profiles", report
-            ) or []
+            profiles = (
+                _require_list(pronunciation, f"{locale_path}: pronunciation_profiles", report) or []
+            )
             for index, item in enumerate(profiles):
                 label = f"{locale_path}: pronunciation_profiles[{index}]"
                 profile = _require_mapping(item, label, report)
@@ -503,8 +514,7 @@ def format_report(report: ValidationReport) -> str:
     for code, data in report.coverage.items():
         levels = data.get("levels", {})
         lines.append(
-            f"{code} — {data.get('name')} [{data.get('level_framework')}] "
-            f"({data.get('status')})"
+            f"{code} — {data.get('name')} [{data.get('level_framework')}] ({data.get('status')})"
         )
         if data.get("features"):
             lines.append(f"  features: {data['features']}")
@@ -531,9 +541,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate Polyglot Coach language packs")
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="Curriculum directory")
     parser.add_argument("--json", action="store_true", help="Emit JSON instead of text")
-    parser.add_argument(
-        "--strict", action="store_true", help="Fail on warnings as well as errors"
-    )
+    parser.add_argument("--strict", action="store_true", help="Fail on warnings as well as errors")
     parser.add_argument("--quiet", action="store_true", help="Only print errors")
     args = parser.parse_args(argv)
 

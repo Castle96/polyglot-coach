@@ -1,23 +1,56 @@
 """Tests for the analytics MCP service."""
 
 from polyglot_coach_shared.database import get_session
-from polyglot_coach_shared.models import MistakeRecord, ProgressRecord, ReviewItem, VocabularyEntry
+from polyglot_coach_shared.models import (
+    MistakeRecord,
+    ProgressRecord,
+    ReviewItem,
+    VocabularyEntry,
+)
 
 
 def _seed_data():
     session = get_session(":memory:")
-    session.add_all([
-        VocabularyEntry(profile_id=0, word="hola", translation="hello", language="es"),
-        VocabularyEntry(profile_id=0, word="adios", translation="goodbye", language="es"),
-        VocabularyEntry(profile_id=0, word="gracias", translation="thank you", language="es"),
-        ProgressRecord(profile_id=0, event_type="lesson", detail="Lesson 1"),
-        ProgressRecord(profile_id=0, event_type="lesson", detail="Lesson 2"),
-        MistakeRecord(profile_id=0, category="grammar", user_input="bad", correction="good"),
-        MistakeRecord(profile_id=0, category="vocabulary", user_input="wrong", correction="right"),
-        ReviewItem(profile_id=0, word="hola", language="es", interval=1, ease_factor=2.5, repetitions=3),
-        ReviewItem(profile_id=0, word="adios", language="es", interval=5, ease_factor=2.5, repetitions=1),
-        ReviewItem(profile_id=0, word="gracias", language="es", interval=1, ease_factor=2.5, repetitions=0),
-    ])
+    session.add_all(
+        [
+            VocabularyEntry(profile_id=0, word="hola", translation="hello", language="es"),
+            VocabularyEntry(profile_id=0, word="adios", translation="goodbye", language="es"),
+            VocabularyEntry(profile_id=0, word="gracias", translation="thank you", language="es"),
+            ProgressRecord(profile_id=0, event_type="lesson", detail="Lesson 1"),
+            ProgressRecord(profile_id=0, event_type="lesson", detail="Lesson 2"),
+            MistakeRecord(profile_id=0, category="grammar", user_input="bad", correction="good"),
+            MistakeRecord(
+                profile_id=0,
+                category="vocabulary",
+                user_input="wrong",
+                correction="right",
+            ),
+            ReviewItem(
+                profile_id=0,
+                word="hola",
+                language="es",
+                interval=1,
+                ease_factor=2.5,
+                repetitions=3,
+            ),
+            ReviewItem(
+                profile_id=0,
+                word="adios",
+                language="es",
+                interval=5,
+                ease_factor=2.5,
+                repetitions=1,
+            ),
+            ReviewItem(
+                profile_id=0,
+                word="gracias",
+                language="es",
+                interval=1,
+                ease_factor=2.5,
+                repetitions=0,
+            ),
+        ]
+    )
     session.commit()
     session.close()
 

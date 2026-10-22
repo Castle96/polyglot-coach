@@ -20,7 +20,10 @@ async def handle_list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "locale": {"type": "string", "description": "Locale code (e.g. 'es_MX', 'fr_CA')"},
+                    "locale": {
+                        "type": "string",
+                        "description": "Locale code (e.g. 'es_MX', 'fr_CA')",
+                    },
                     "language": {"type": "string", "description": "Language code"},
                 },
                 "required": ["locale", "language"],

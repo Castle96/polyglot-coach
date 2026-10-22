@@ -165,8 +165,12 @@ def list_sessions(
 
     if query:
         titles = [(s, s.title.lower()) for s in sessions]
-        matches = difflib.get_close_matches(query.lower(), [t for _, t in titles], n=limit, cutoff=0.6)
-        sessions = [s for s, t in titles if t in matches or any(m in t for m in query.lower().split())]
+        matches = difflib.get_close_matches(
+            query.lower(), [t for _, t in titles], n=limit, cutoff=0.6
+        )
+        sessions = [
+            s for s, t in titles if t in matches or any(m in t for m in query.lower().split())
+        ]
 
     return [
         {
@@ -209,8 +213,11 @@ def delete_session(session_id: int) -> bool:
 
 def export_vocabulary_json(profile_id: int) -> list[dict]:
     from polyglot_coach_shared.models import VocabularyEntry
+
     db_session = get_session()
-    entries = db_session.query(VocabularyEntry).filter(VocabularyEntry.profile_id == profile_id).all()
+    entries = (
+        db_session.query(VocabularyEntry).filter(VocabularyEntry.profile_id == profile_id).all()
+    )
     return [
         {
             "word": e.word,
@@ -226,8 +233,11 @@ def export_vocabulary_json(profile_id: int) -> list[dict]:
 
 def export_vocabulary_csv(profile_id: int) -> str:
     from polyglot_coach_shared.models import VocabularyEntry
+
     db_session = get_session()
-    entries = db_session.query(VocabularyEntry).filter(VocabularyEntry.profile_id == profile_id).all()
+    entries = (
+        db_session.query(VocabularyEntry).filter(VocabularyEntry.profile_id == profile_id).all()
+    )
     lines = ["word,translation,language,context,tags"]
     for e in entries:
         context = (e.context_sentence or "").replace(",", ";").replace("\n", " ")
@@ -238,6 +248,7 @@ def export_vocabulary_csv(profile_id: int) -> str:
 
 def export_anki_deck(profile_id: int, language: str | None = None) -> str:
     from polyglot_coach_shared.models import VocabularyEntry
+
     db_session = get_session()
     query = db_session.query(VocabularyEntry).filter(VocabularyEntry.profile_id == profile_id)
     if language:

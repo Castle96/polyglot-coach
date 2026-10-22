@@ -20,7 +20,10 @@ async def handle_list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "language": {"type": "string", "description": "Language code"},
-                    "level": {"type": "string", "description": "Level within the language's framework"},
+                    "level": {
+                        "type": "string",
+                        "description": "Level within the language's framework",
+                    },
                     "topic": {"type": "string", "description": "Optional topic filter"},
                 },
                 "required": ["language", "level"],

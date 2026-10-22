@@ -33,6 +33,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CURRICULUM_DIR = PROJECT_ROOT / "curriculum"
 
+
 # --- scaffold templates ---
 def _language_content(
     lang_code: str,
@@ -77,6 +78,7 @@ def _register_language_hint(lang_code: str) -> None:
         f"  Remember to add '{lang_code}' to curriculum/registry.yaml "
         "(and remove it from planned_languages)."
     )
+
 
 GRAMMAR_TEMPLATE = """\
 rules:
@@ -126,18 +128,23 @@ def _llm_prompt(prompt: str, temperature: float = 0.3) -> str:
     ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
     ollama_model = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
     try:
-        import urllib.request
         import json
+        import urllib.request
+
         resp = urllib.request.urlopen(f"{ollama_host}/api/tags", timeout=3)
         # Ollama is running — use it
-        body = json.dumps({
-            "model": ollama_model,
-            "prompt": prompt,
-            "stream": False,
-            "options": {"temperature": temperature, "num_predict": 4096},
-        }).encode()
+        body = json.dumps(
+            {
+                "model": ollama_model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": temperature, "num_predict": 4096},
+            }
+        ).encode()
         req = urllib.request.Request(
-            f"{ollama_host}/api/generate", data=body, method="POST",
+            f"{ollama_host}/api/generate",
+            data=body,
+            method="POST",
             headers={"Content-Type": "application/json"},
         )
         resp = urllib.request.urlopen(req, timeout=300)
@@ -227,6 +234,7 @@ Make scenarios practical for real-life situations appropriate to this level."""
 
 # --- commands ---
 
+
 def cmd_scaffold(args):
     """Create empty YAML structure for a language/level."""
     lang_dir = CURRICULUM_DIR / args.lang_code
@@ -265,7 +273,12 @@ def cmd_scaffold(args):
     ]:
         path = level_dir / filename
         if not path.exists() or args.force:
-            content = template.format(lang_code=args.lang_code, lang_name=args.lang_name, level=args.level, level_title=f"{args.lang_name} {args.level}")
+            content = template.format(
+                lang_code=args.lang_code,
+                lang_name=args.lang_name,
+                level=args.level,
+                level_title=f"{args.lang_name} {args.level}",
+            )
             path.write_text(content)
             print(f"  Created: {path}")
 
@@ -399,32 +412,39 @@ def cmd_import_librelingo(args):
                     translation = item.get("translation") or item.get("to", "")
                     if word and translation and word not in seen_words:
                         seen_words.add(word)
-                        all_words.append({
-                            "word": word,
-                            "translation": translation,
-                            "tags": _detect_tags(skill_name),
-                        })
+                        all_words.append(
+                            {
+                                "word": word,
+                                "translation": translation,
+                                "tags": _detect_tags(skill_name),
+                            }
+                        )
                     if word:
                         scenario_phrases.append(word)
 
             if scenario_phrases:
-                all_scenarios.append({
-                    "title": f"{skill_name}",
-                    "context": f"Practice {skill_name.lower()} in {lang_name}.",
-                    "level": "A1",
-                    "roles": "Learner, Tutor",
-                    "vocabulary_hints": ", ".join(scenario_phrases[:10]),
-                    "grammar_focus": "",
-                })
+                all_scenarios.append(
+                    {
+                        "title": f"{skill_name}",
+                        "context": f"Practice {skill_name.lower()} in {lang_name}.",
+                        "level": "A1",
+                        "roles": "Learner, Tutor",
+                        "vocabulary_hints": ", ".join(scenario_phrases[:10]),
+                        "grammar_focus": "",
+                    }
+                )
 
     # Write vocabulary
     if all_words:
         vocab_path = lang_dir / "A1" / "vocabulary.yaml"
         (lang_dir / "A1").mkdir(parents=True, exist_ok=True)
-        vocab_path.write_text("words:\n" + "\n".join(
-            f"  - word: {w['word']}\n    translation: {w['translation']}\n    tags: {w['tags']}"
-            for w in all_words
-        ))
+        vocab_path.write_text(
+            "words:\n"
+            + "\n".join(
+                f"  - word: {w['word']}\n    translation: {w['translation']}\n    tags: {w['tags']}"
+                for w in all_words
+            )
+        )
         print(f"  Wrote {len(all_words)} words to: {vocab_path}")
 
     # Write scenarios
@@ -433,12 +453,12 @@ def cmd_import_librelingo(args):
         sc_content = "scenarios:\n"
         for sc in all_scenarios:
             sc_content += textwrap.dedent(f"""\
-              - title: "{sc['title']}"
-                context: "{sc['context']}"
-                level: {sc['level']}
-                roles: "{sc['roles']}"
-                vocabulary_hints: "{sc['vocabulary_hints']}"
-                grammar_focus: "{sc['grammar_focus']}"
+              - title: "{sc["title"]}"
+                context: "{sc["context"]}"
+                level: {sc["level"]}
+                roles: "{sc["roles"]}"
+                vocabulary_hints: "{sc["vocabulary_hints"]}"
+                grammar_focus: "{sc["grammar_focus"]}"
             """)
         sc_path.write_text(sc_content)
         print(f"  Wrote {len(all_scenarios)} scenarios to: {sc_path}")
@@ -477,6 +497,7 @@ def _detect_tags(skill_name: str) -> str:
 
 # --- main ---
 
+
 def main():
     parser = argparse.ArgumentParser(description="Polyglot Coach Curriculum Generator")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -489,7 +510,10 @@ def main():
     p.add_argument("--native-name", help="Native language name (e.g. Français)")
     p.add_argument("--framework", default="cefr", help="Proficiency framework (cefr, jlpt)")
     p.add_argument("--force", "-f", action="store_true", help="Overwrite existing files")
-    p.add_argument("--levels", help="Comma-separated levels for language.yaml (default: same as level)")
+    p.add_argument(
+        "--levels",
+        help="Comma-separated levels for language.yaml (default: same as level)",
+    )
 
     # generate
     p = sub.add_parser("generate", help="Generate curriculum content using LLM")

@@ -23,6 +23,21 @@ dev-dependencies = [
 [tool.mypy]
 ignore_missing_imports = true
 
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv", "node_modules", "dist", "build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Prompt templates are sent verbatim to a model; line breaks are meaningful.
+"tools/generate-curriculum.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.uv.sources]
 polyglot-coach-api = { workspace = true }
 polyglot-coach-shared = { workspace = true }

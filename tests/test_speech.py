@@ -1,7 +1,6 @@
 """Tests for the local speech API endpoints."""
 
 from fastapi.testclient import TestClient
-
 from polyglot_coach_api.main import app
 from polyglot_coach_api.routers import speech
 

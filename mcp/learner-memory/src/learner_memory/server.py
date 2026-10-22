@@ -6,7 +6,19 @@ from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import ServerCapabilities, TextContent, Tool
 
-from learner_memory import delete_session, export_anki_deck, export_vocabulary_csv, export_vocabulary_json, get_profile, get_progress, list_sessions, load_session, record_mistake, save_session, update_profile
+from learner_memory import (
+    delete_session,
+    export_anki_deck,
+    export_vocabulary_csv,
+    export_vocabulary_json,
+    get_profile,
+    get_progress,
+    list_sessions,
+    load_session,
+    record_mistake,
+    save_session,
+    update_profile,
+)
 
 server = Server("learner-memory")
 
@@ -33,10 +45,19 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "profile_id": {"type": "integer", "description": "Profile ID"},
                     "name": {"type": "string", "description": "New display name"},
-                    "native_language": {"type": "string", "description": "Native language code (e.g. 'en')"},
-                    "target_language": {"type": "string", "description": "Target language code (e.g. 'es')"},
+                    "native_language": {
+                        "type": "string",
+                        "description": "Native language code (e.g. 'en')",
+                    },
+                    "target_language": {
+                        "type": "string",
+                        "description": "Target language code (e.g. 'es')",
+                    },
                     "locale": {"type": "string", "description": "Locale code (e.g. 'es_MX')"},
-                    "proficiency_level": {"type": "string", "description": "Level within the language's framework (e.g. CEFR A1-C2, JLPT N5-N1)"},
+                    "proficiency_level": {
+                        "type": "string",
+                        "description": "Level within the language's framework (e.g. CEFR A1-C2, JLPT N5-N1)",
+                    },
                 },
                 "required": ["profile_id"],
             },
@@ -48,8 +69,14 @@ async def handle_list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "profile_id": {"type": "integer", "description": "Profile ID"},
-                    "category": {"type": "string", "description": "Mistake category (e.g. 'grammar', 'vocabulary', 'pronunciation')"},
-                    "user_input": {"type": "string", "description": "What the learner said or wrote"},
+                    "category": {
+                        "type": "string",
+                        "description": "Mistake category (e.g. 'grammar', 'vocabulary', 'pronunciation')",
+                    },
+                    "user_input": {
+                        "type": "string",
+                        "description": "What the learner said or wrote",
+                    },
                     "correction": {"type": "string", "description": "The correct form"},
                     "explanation": {"type": "string", "description": "Explanation of the mistake"},
                     "context": {"type": "string", "description": "Conversational context"},
@@ -64,8 +91,14 @@ async def handle_list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "profile_id": {"type": "integer", "description": "Profile ID"},
-                    "event_type": {"type": "string", "description": "Filter by event type (optional)"},
-                    "limit": {"type": "integer", "description": "Max records to return (default 50)"},
+                    "event_type": {
+                        "type": "string",
+                        "description": "Filter by event type (optional)",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max records to return (default 50)",
+                    },
                 },
                 "required": ["profile_id"],
             },
@@ -78,9 +111,15 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "profile_id": {"type": "integer", "description": "Profile ID"},
                     "title": {"type": "string", "description": "Session title"},
-                    "language": {"type": "string", "description": "Language code (e.g. 'es', 'ja')"},
+                    "language": {
+                        "type": "string",
+                        "description": "Language code (e.g. 'es', 'ja')",
+                    },
                     "state": {"type": "string", "description": "JSON string of conversation state"},
-                    "session_id": {"type": "integer", "description": "Existing session ID to update (optional)"},
+                    "session_id": {
+                        "type": "integer",
+                        "description": "Existing session ID to update (optional)",
+                    },
                 },
                 "required": ["profile_id", "title", "language", "state"],
             },
@@ -93,7 +132,10 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "profile_id": {"type": "integer", "description": "Profile ID"},
                     "language": {"type": "string", "description": "Filter by language (optional)"},
-                    "query": {"type": "string", "description": "Fuzzy search query for session titles"},
+                    "query": {
+                        "type": "string",
+                        "description": "Fuzzy search query for session titles",
+                    },
                     "limit": {"type": "integer", "description": "Max results (default 20)"},
                 },
                 "required": ["profile_id"],

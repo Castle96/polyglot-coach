@@ -1,8 +1,5 @@
 """Tests for the shared database and models."""
 
-
-from sqlalchemy import inspect
-
 from polyglot_coach_shared.database import _make_url, get_session, init_db
 from polyglot_coach_shared.models import (
     ConversationScenario,
@@ -14,6 +11,7 @@ from polyglot_coach_shared.models import (
     ReviewItem,
     VocabularyEntry,
 )
+from sqlalchemy import inspect
 
 
 def test_make_url_default(monkeypatch):
@@ -73,7 +71,13 @@ class TestLearnerProfile:
 class TestVocabularyEntry:
     def test_create_and_query(self):
         session = get_session(":memory:")
-        profile = LearnerProfile(name="Bob", native_language="en", target_language="fr", locale="fr_FR", proficiency_level="A2")
+        profile = LearnerProfile(
+            name="Bob",
+            native_language="en",
+            target_language="fr",
+            locale="fr_FR",
+            proficiency_level="A2",
+        )
         session.add(profile)
         session.flush()
 
@@ -97,7 +101,13 @@ class TestVocabularyEntry:
 class TestMistakeRecord:
     def test_create_and_query(self):
         session = get_session(":memory:")
-        profile = LearnerProfile(name="Carlos", native_language="en", target_language="es", locale="neutral", proficiency_level="A1")
+        profile = LearnerProfile(
+            name="Carlos",
+            native_language="en",
+            target_language="es",
+            locale="neutral",
+            proficiency_level="A1",
+        )
         session.add(profile)
         session.flush()
 
@@ -121,7 +131,13 @@ class TestMistakeRecord:
 class TestProgressRecord:
     def test_create_and_query(self):
         session = get_session(":memory:")
-        profile = LearnerProfile(name="Diana", native_language="en", target_language="de", locale="de_DE", proficiency_level="B1")
+        profile = LearnerProfile(
+            name="Diana",
+            native_language="en",
+            target_language="de",
+            locale="de_DE",
+            proficiency_level="B1",
+        )
         session.add(profile)
         session.flush()
 
@@ -134,7 +150,9 @@ class TestProgressRecord:
         session.add(record)
         session.commit()
 
-        found = session.query(ProgressRecord).filter(ProgressRecord.profile_id == profile.id).first()
+        found = (
+            session.query(ProgressRecord).filter(ProgressRecord.profile_id == profile.id).first()
+        )
         assert found is not None
         assert found.event_type == "lesson_complete"
         assert found.score == 85.0
@@ -156,7 +174,9 @@ class TestGrammarRule:
         session.add(rule)
         session.commit()
 
-        found = session.query(GrammarRule).filter(GrammarRule.rule_id == "es_verb_ser_estar").first()
+        found = (
+            session.query(GrammarRule).filter(GrammarRule.rule_id == "es_verb_ser_estar").first()
+        )
         assert found is not None
         assert found.title == "Ser vs Estar"
         session.close()
@@ -184,7 +204,13 @@ class TestLocaleOverride:
 class TestReviewItem:
     def test_create_and_query(self):
         session = get_session(":memory:")
-        profile = LearnerProfile(name="Eve", native_language="en", target_language="ja", locale="ja_JP", proficiency_level="N5")
+        profile = LearnerProfile(
+            name="Eve",
+            native_language="en",
+            target_language="ja",
+            locale="ja_JP",
+            proficiency_level="N5",
+        )
         session.add(profile)
         session.flush()
 
@@ -220,7 +246,11 @@ class TestConversationScenario:
         session.add(scenario)
         session.commit()
 
-        found = session.query(ConversationScenario).filter(ConversationScenario.language == "fr").first()
+        found = (
+            session.query(ConversationScenario)
+            .filter(ConversationScenario.language == "fr")
+            .first()
+        )
         assert found is not None
         assert found.level == "A2"
         session.close()
